@@ -67,3 +67,12 @@ class NonBlockingConductor(impl_executor.ExecutorConductor):
                 raise ValueError("Provided keyword argument 'executor_factory'"
                                  " must be callable")
             self._executor_factory = executor_factory
+
+    def __getstate__(self):
+        state = super(NonBlockingConductor, self).__getstate__()
+        del state['_executor_factory']
+        return state
+
+    def __setstate__(self, state):
+        super(NonBlockingConductor, self).__setstate__(state)
+        self._executor_factory = self._default_executor_factory

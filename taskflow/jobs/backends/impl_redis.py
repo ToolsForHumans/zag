@@ -591,6 +591,18 @@ return cmsgpack.pack(result)
         # full logbook.
         self._persistence = persistence
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        for attr in ('_open_close_lock', '_client'):
+            del state[attr]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._open_close_lock = threading.RLock()
+        self._owns_client = True
+        self._client = self._make_client(self._conf)
+
     def join(self, key_piece, *more_key_pieces):
         """Create and return a namespaced key from many segments.
 

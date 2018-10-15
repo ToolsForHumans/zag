@@ -113,8 +113,9 @@ class ExecutorConductor(base.Conductor):
         super(ExecutorConductor, self).__init__(
             name, jobboard, persistence=persistence,
             engine=engine, engine_options=engine_options)
+        self._wait_timeout_value = wait_timeout
         self._wait_timeout = tt.convert_to_timeout(
-            value=wait_timeout, default_value=self.WAIT_TIMEOUT,
+            value=self._wait_timeout_value, default_value=self.WAIT_TIMEOUT,
             event_factory=self._event_factory)
         self._dead = self._event_factory()
         self._log = misc.pick_first_not_none(log, self.LOG, LOG)
@@ -122,6 +123,20 @@ class ExecutorConductor(base.Conductor):
             misc.pick_first_not_none(max_simultaneous_jobs,
                                      self.MAX_SIMULTANEOUS_JOBS))
         self._dispatched = set()
+
+    def __getstate__(self):
+        state = super(ExecutorConductor, self).__getstate__()
+        for attr in ('_dead', '_dispatched', '_wait_timeout'):
+            del state[attr]
+        return state
+
+    def __setstate__(self, state):
+        super(ExecutorConductor, self).__setstate__(state)
+        self._dead = self._event_factory()
+        self._dispatched = set()
+        self._wait_timeout = tt.convert_to_timeout(
+            value=self._wait_timeout_value, default_value=self.WAIT_TIMEOUT,
+            event_factory=self._event_factory)
 
     def _executor_factory(self):
         """Creates an executor to be used during dispatching."""

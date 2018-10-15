@@ -65,6 +65,15 @@ class ZookeeperJob(base.Job):
         self._sequence = int(basename[len(board.JOB_PREFIX):])
         self._priority = priority
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_client']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._client = self.board._client
+
     @property
     def lock_path(self):
         """Path the job lock/claim and owner znode is stored."""
@@ -319,6 +328,22 @@ class ZookeeperJobBoard(base.NotifyingJobBoard):
         self._suspended = False
         self._closing = False
         self._last_states = collections.deque(maxlen=self.STATE_HISTORY_LENGTH)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        for attr in ('_open_close_lock', '_job_cond', '_job_watcher', '_worker', '_client', '_known_jobs'):
+            del state[attr]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._job_cond = threading.Condition()
+        self._open_close_lock = threading.RLock()
+        self._worker = None
+        self._job_watcher = None
+        self._owned = True
+        self._client = kazoo_utils.make_client(self._conf)
+        self._known_jobs = {}
 
     def _try_emit(self, state, details):
         # Submit the work to the executor to avoid blocking the kazoo threads

@@ -253,6 +253,18 @@ class SQLAlchemyBackend(base.Backend):
         except TypeError:
             self._max_retries = 0
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        for attr in ('_upgrade_lock', '_engine'):
+            del state[attr]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._upgrade_lock = threading.Lock()
+        self._owns_engine = True
+        self._engine = self._create_engine(self._conf)
+
     @staticmethod
     def _create_engine(conf):
         # NOTE(harlowja): copy the internal one so that we don't modify it via

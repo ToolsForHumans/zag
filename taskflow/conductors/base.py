@@ -51,6 +51,15 @@ class Conductor(object):
         self._lock = threading.RLock()
         self._notifier = notifier.Notifier()
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_lock']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._lock = threading.RLock()
+
     @misc.cachedproperty
     def conductor(self):
         """Entity object that represents this conductor."""
