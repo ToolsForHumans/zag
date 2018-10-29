@@ -191,13 +191,16 @@ class Proxy(object):
 
         LOG.debug("Sending '%s' message using routing keys %s",
                   msg, routing_keys)
-        with kombu.connections[self._conn].acquire(block=True) as conn:
+        conn = kombu.connections[self._conn].acquire(block=True)
+        try:
             with conn.Producer() as producer:
                 ensure_kwargs = self._ensure_options.copy()
                 ensure_kwargs['errback'] = _publish_errback
                 safe_publish = conn.ensure(producer, _publish, **ensure_kwargs)
                 for routing_key in routing_keys:
                     safe_publish(producer, routing_key)
+        finally:
+            conn.release()
 
     def start(self):
         """Start proxy."""
@@ -214,7 +217,8 @@ class Proxy(object):
 
         LOG.info("Starting to consume from the '%s' exchange.",
                  self._exchange_name)
-        with kombu.connections[self._conn].acquire(block=True) as conn:
+        conn = kombu.connections[self._conn].acquire(block=True)
+        try:
             queue = self._make_queue(self._topic, self._exchange, channel=conn)
             callbacks = [self._dispatcher.on_message]
             with conn.Consumer(queues=queue, callbacks=callbacks) as consumer:
@@ -229,6 +233,8 @@ class Proxy(object):
                             self._on_wait()
                 finally:
                     self._running.clear()
+        finally:
+            conn.release()
 
     def wait(self):
         """Wait until proxy is started."""

@@ -48,12 +48,13 @@ class TestProxy(test.MockTestCase):
         self.conn_inst_mock.drain_events.side_effect = [
             socket.timeout, socket.timeout, KeyboardInterrupt]
         self.conn_inst_mock.ensure = mock.MagicMock(side_effect=_ensure)
+        self.conn_inst_mock.release = mock.MagicMock()
 
         # connections mocking
         self.connections_mock = self.patch(
             "taskflow.engines.worker_based.proxy.kombu.connections",
             attach_as='connections')
-        self.connections_mock.__getitem__().acquire().__enter__.return_value =\
+        self.connections_mock.__getitem__().acquire.return_value =\
             self.conn_inst_mock
 
         # producers mocking
