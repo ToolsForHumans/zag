@@ -76,7 +76,8 @@ class TestPipeline(test.TestCase):
 
     def test_execution_pipeline(self):
         executor, server = self._start_components([test_utils.TaskOneReturn])
-        self.assertEqual(0, executor._finder.wait_for_workers(timeout=WAIT_TIMEOUT))
+        self.assertEqual(0, executor._finder.wait_for_workers(
+            timeout=WAIT_TIMEOUT))
 
         t = test_utils.TaskOneReturn()
         progress_callback = lambda *args, **kwargs: None

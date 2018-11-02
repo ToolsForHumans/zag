@@ -60,7 +60,8 @@ class WorkerTaskExecutor(executor.TaskExecutor):
             raise ValueError("Provided factory used to build worker finders"
                              " must be callable")
         self._finder = finder_factory(topic, self._proxy)
-        self._finder.notifier.register(pr.WORKER_LOST, self._reassign_worker_tasks)
+        self._finder.notifier.register(pr.WORKER_LOST,
+                                       self._reassign_worker_tasks)
 
         self._helpers = tu.ThreadBundle()
         self._helpers.bind(lambda: tu.daemon_thread(self._proxy.start),
