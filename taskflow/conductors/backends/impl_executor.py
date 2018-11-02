@@ -109,10 +109,12 @@ class ExecutorConductor(base.Conductor):
     def __init__(self, name, jobboard,
                  persistence=None, engine=None,
                  engine_options=None, wait_timeout=None,
-                 log=None, max_simultaneous_jobs=MAX_SIMULTANEOUS_JOBS):
+                 log=None, max_simultaneous_jobs=MAX_SIMULTANEOUS_JOBS,
+                 listener_factories=None):
         super(ExecutorConductor, self).__init__(
             name, jobboard, persistence=persistence,
-            engine=engine, engine_options=engine_options)
+            engine=engine, engine_options=engine_options,
+            listener_factories=listener_factories)
         self._wait_timeout = tt.convert_to_timeout(
             value=wait_timeout, default_value=self.WAIT_TIMEOUT,
             event_factory=self._event_factory)
@@ -288,7 +290,8 @@ class ExecutorConductor(base.Conductor):
                     ensure_fresh = False
                 job_it = itertools.takewhile(
                     self._can_claim_more_jobs,
-                    self._jobboard.iterjobs(only_unclaimed=True, ensure_fresh=ensure_fresh))
+                    self._jobboard.iterjobs(only_unclaimed=True,
+                                            ensure_fresh=ensure_fresh))
                 for job in job_it:
                     self._log.debug("Trying to claim job: %s", job)
                     try:
