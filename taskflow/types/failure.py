@@ -506,8 +506,13 @@ class Failure(mixins.StrMixin):
 
     @staticmethod
     def safe_encode(data):
-        """Encodes exception arguments into types that can be serialized
-        as JSON by kombu"""
+        """Make sure we can encode exc_args as JSON
+
+        We do best-effort to recreate the exception over the wire,
+        but it's more important that we return the exception than
+        guaranteeing 100% compatibility with exceptions that have
+        complex properties that aren't safely converted to JSON.
+        """
         try:
             primitive = jsonutils.to_primitive(data)
         except ValueError:
@@ -528,7 +533,8 @@ class Failure(mixins.StrMixin):
             'traceback_str': self.traceback_str,
             'exc_type_names': list(self),
             'version': self.DICT_VERSION,
-            'exc_args': tuple([self.safe_encode(arg) for arg in self.exception_args]),
+            'exc_args': tuple([self.safe_encode(arg)
+                               for arg in self.exception_args]),
             'causes': [f.to_dict() for f in self.causes],
         }
 

@@ -45,7 +45,8 @@ _TransportDetails = collections.namedtuple('_TransportDetails',
 SERIALIZER = 'json'
 
 kombu_serialization.register(SERIALIZER, jsonutils.dumps, jsonutils.loads,
-                             content_type='application/json', content_encoding='utf-8')
+                             content_type='application/json',
+                             content_encoding='utf-8')
 
 
 class Proxy(object):

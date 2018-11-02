@@ -464,7 +464,6 @@ class ZookeeperJobBoard(base.NotifyingJobBoard):
             self._try_emit(base.POSTED, details={'job': job})
 
     def _on_job_posting(self, children, delayed=True):
-        LOG.debug("Got children %s under path %s", children, self.path)
         child_paths = []
         for c in children:
             if (c.endswith(self.LOCK_POSTFIX) or

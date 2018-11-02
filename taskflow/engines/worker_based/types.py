@@ -182,7 +182,7 @@ class ProxyWorkerFinder(WorkerFinder):
         self._messages_published = 0
         self._worker_expiry = worker_expiry
         self._watch = timeutils.StopWatch(duration=beat_periodicity)
-        # TODO (jimbobhickville): this needs to be refactored
+        # TODO(jimbobhickville): this needs to be refactored
         self._proxy.dispatcher.type_handlers.update({
             pr.NOTIFY: dispatcher.Handler(
                 self.process_response,
