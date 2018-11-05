@@ -42,7 +42,8 @@ class Conductor(object):
     ENTITY_KIND = 'conductor'
 
     def __init__(self, name, jobboard,
-                 persistence=None, engine=None, engine_options=None):
+                 persistence=None, engine=None, engine_options=None,
+                 listener_factories=None):
         self._name = name
         self._jobboard = jobboard
         self._engine = engine
@@ -50,6 +51,14 @@ class Conductor(object):
         self._persistence = persistence
         self._lock = threading.RLock()
         self._notifier = notifier.Notifier()
+        if listener_factories:
+            for factory in listener_factories:
+                if not six.callable(factory):
+                    raise ValueError("Function to use for listener_factory "
+                                     "must be callable")
+            self._listener_factories = listener_factories
+        else:
+            self._listener_factories = []
 
     @misc.cachedproperty
     def conductor(self):
@@ -139,7 +148,7 @@ class Conductor(object):
         """
         # TODO(dkrause): Create a standard way to pass listeners or
         #                listener factories over the jobboard
-        return []
+        return [factory(job, engine) for factory in self._listener_factories]
 
     @fasteners.locked
     def connect(self):

@@ -32,10 +32,12 @@ class BlockingConductor(impl_executor.ExecutorConductor):
     def __init__(self, name, jobboard,
                  persistence=None, engine=None,
                  engine_options=None, wait_timeout=None,
-                 log=None, max_simultaneous_jobs=MAX_SIMULTANEOUS_JOBS):
+                 log=None, max_simultaneous_jobs=MAX_SIMULTANEOUS_JOBS,
+                 listener_factories=None):
         super(BlockingConductor, self).__init__(
             name, jobboard,
             persistence=persistence, engine=engine,
             engine_options=engine_options,
             wait_timeout=wait_timeout, log=log,
-            max_simultaneous_jobs=max_simultaneous_jobs)
+            max_simultaneous_jobs=max_simultaneous_jobs,
+            listener_factories=listener_factories)

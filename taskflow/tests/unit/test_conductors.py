@@ -26,10 +26,12 @@ from taskflow.conductors import backends
 from taskflow import engines
 from taskflow.jobs.backends import impl_zookeeper
 from taskflow.jobs import base
+from taskflow.listeners import timing as timing_listener
 from taskflow.patterns import linear_flow as lf
 from taskflow.persistence.backends import impl_memory
 from taskflow import states as st
 from taskflow import test
+from taskflow.test import mock
 from taskflow.tests import utils as test_utils
 from taskflow.utils import persistence_utils as pu
 from taskflow.utils import threading_utils
@@ -418,6 +420,65 @@ class ManyConductorTest(testscenarios.TestWithScenarios,
             self.assertTrue(job_abandoned_event.is_set())
             self.assertFalse(job_consumed_event.is_set())
             self.assertFalse(consumed_event.is_set())
+
+
+class ListenerFactoryTest(test.TestCase):
+    def make_components(self, listener_factories):
+        client = fake_client.FakeClient()
+        persistence = impl_memory.MemoryBackend()
+        board = impl_zookeeper.ZookeeperJobBoard('testing', {},
+                                                 client=client,
+                                                 persistence=persistence)
+        conductor_kwargs = {
+            'wait_timeout': 0.1,
+            'listener_factories': listener_factories,
+            'persistence': persistence,
+        }
+        conductor = backends.fetch('blocking', 'testing', board,
+                                   **conductor_kwargs)
+        return ComponentBundle(board, client, persistence, conductor)
+
+    def test_invalid_listener_factories(self):
+        def invalid():
+            return self.make_components(listener_factories=['a'])
+
+        self.assertRaisesRegex(ValueError, r'.* must be callable', invalid)
+
+    def test_valid_listener_factories(self):
+        def logging_listener_factory(job, engine):
+            return timing_listener.DurationListener(engine)
+
+        components = self.make_components(
+            listener_factories=[logging_listener_factory]
+        )
+        components.conductor.connect()
+        consumed_event = threading.Event()
+
+        def on_consume(state, details):
+            consumed_event.set()
+
+        store = {'x': True, 'y': False, 'z': None}
+
+        components.board.notifier.register(base.REMOVAL, on_consume)
+        mock_method = 'taskflow.listeners.timing.DurationListener._receiver'
+        with mock.patch(mock_method) as mock_receiver:
+            with close_many(components.conductor, components.client):
+                t = threading_utils.daemon_thread(components.conductor.run)
+                t.start()
+                lb, fd = pu.temporary_flow_detail(components.persistence,
+                                                  meta={'store': store})
+                engines.save_factory_details(fd, test_store_factory,
+                                             [], {},
+                                             backend=components.persistence)
+                components.board.post('poke', lb,
+                                      details={'flow_uuid': fd.uuid})
+                self.assertTrue(consumed_event.wait(test_utils.WAIT_TIMEOUT))
+                components.conductor.stop()
+                self.assertTrue(components.conductor.wait(
+                    test_utils.WAIT_TIMEOUT))
+                self.assertFalse(components.conductor.dispatching)
+
+            self.assertGreaterEqual(1, mock_receiver.call_count)
 
 
 class NonBlockingExecutorTest(test.TestCase):
