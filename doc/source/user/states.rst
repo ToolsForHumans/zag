@@ -9,7 +9,7 @@ States
   The code contains explicit checks during transitions using the models
   described below. These checks ensure that a transition is valid, if the
   transition is determined to be invalid the transitioning code will raise
-  a :py:class:`~taskflow.exceptions.InvalidState` exception. This exception
+  a :py:class:`~zag.exceptions.InvalidState` exception. This exception
   being triggered usually means there is some kind of bug in the code or some
   type of misuse/state violation is occurring, and should be reported as such.
 
@@ -51,7 +51,7 @@ Flow
    :alt: Flow state transitions
 
 **PENDING** - A flow starts (or
-via :py:meth:`~taskflow.engines.base.Engine.reset`) its execution lifecycle
+via :py:meth:`~zag.engines.base.Engine.reset`) its execution lifecycle
 in this state (it has no state prior to being ran by an engine, since
 flow(s) are just pattern(s) that define the semantics and ordering of their
 contents and flows gain state only when they are executed).
@@ -132,30 +132,30 @@ the ``IGNORE`` state.
 
 **RUNNING** - When an engine running the task starts to execute the task, the
 engine will transition the task to the ``RUNNING`` state, and the task will
-stay in this state until the tasks :py:meth:`~taskflow.atom.Atom.execute`
+stay in this state until the tasks :py:meth:`~zag.atom.Atom.execute`
 method returns.
 
 **SUCCESS** - The engine running the task transitions the task to this state
 after the task has finished successfully (ie no exception/s were raised during
-running its :py:meth:`~taskflow.atom.Atom.execute` method).
+running its :py:meth:`~zag.atom.Atom.execute` method).
 
 **FAILURE** - The engine running the task transitions the task to this state
 after it has finished with an error (ie exception/s were raised during
-running its :py:meth:`~taskflow.atom.Atom.execute` method).
+running its :py:meth:`~zag.atom.Atom.execute` method).
 
 **REVERT_FAILURE** - The engine running the task transitions the task to this
 state after it has finished with an error (ie exception/s were raised during
-running its :py:meth:`~taskflow.atom.Atom.revert` method).
+running its :py:meth:`~zag.atom.Atom.revert` method).
 
 **REVERTING** - The engine running a task transitions the task to this state
 when the containing flow the engine is running starts to revert and
-its :py:meth:`~taskflow.atom.Atom.revert` method is called. Only tasks in
+its :py:meth:`~zag.atom.Atom.revert` method is called. Only tasks in
 the ``SUCCESS`` or ``FAILURE`` state can be reverted.  If this method fails (ie
 raises an exception), the task goes to the ``REVERT_FAILURE`` state.
 
 **REVERTED** - The engine running the task transitions the task to this state
 after it has successfully reverted the task (ie no exception/s were raised
-during running its :py:meth:`~taskflow.atom.Atom.revert` method).
+during running its :py:meth:`~zag.atom.Atom.revert` method).
 
 Retry
 =====
@@ -176,7 +176,7 @@ the ``PENDING`` state by the engine this means it can be executed immediately
 or if needed will wait for all of the atoms it depends on to complete (in the
 retry case the retry object will also be consulted when failures occur in the
 flow that the retry is associated with by consulting its
-:py:meth:`~taskflow.retry.Decider.on_failure` method).
+:py:meth:`~zag.retry.Decider.on_failure` method).
 
 .. note::
 
@@ -189,7 +189,7 @@ the ``IGNORE`` state.
 
 **RUNNING** - When an engine starts to execute the retry, the engine
 transitions the retry to the ``RUNNING`` state, and the retry stays in this
-state until its :py:meth:`~taskflow.retry.Retry.execute` method returns.
+state until its :py:meth:`~zag.retry.Retry.execute` method returns.
 
 **SUCCESS** - The engine running the retry transitions it to this state after
 it was finished successfully (ie no exception/s were raised during
@@ -197,21 +197,21 @@ execution).
 
 **FAILURE** - The engine running the retry transitions the retry to this state
 after it has finished with an error (ie exception/s were raised during
-running its :py:meth:`~taskflow.retry.Retry.execute` method).
+running its :py:meth:`~zag.retry.Retry.execute` method).
 
 **REVERT_FAILURE** - The engine running the retry transitions the retry to
 this state after it has finished with an error (ie exception/s were raised
-during its :py:meth:`~taskflow.retry.Retry.revert` method).
+during its :py:meth:`~zag.retry.Retry.revert` method).
 
 **REVERTING** - The engine running the retry transitions to this state when
 the associated flow the engine is running starts to revert it and its
-:py:meth:`~taskflow.retry.Retry.revert` method is called. Only retries
+:py:meth:`~zag.retry.Retry.revert` method is called. Only retries
 in ``SUCCESS`` or ``FAILURE`` state can be reverted. If this method fails (ie
 raises an exception), the retry goes to the ``REVERT_FAILURE`` state.
 
 **REVERTED** - The engine running the retry transitions the retry to this state
 after it has successfully reverted the retry (ie no exception/s were raised
-during running its :py:meth:`~taskflow.retry.Retry.revert` method).
+during running its :py:meth:`~zag.retry.Retry.revert` method).
 
 **RETRYING** - If flow that is associated with the current retry was failed and
 reverted, the engine prepares the flow for the next run and transitions the

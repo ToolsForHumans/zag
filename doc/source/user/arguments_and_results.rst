@@ -2,14 +2,14 @@
 Arguments and results
 =====================
 
-.. |task.execute| replace:: :py:meth:`~taskflow.atom.Atom.execute`
-.. |task.revert| replace:: :py:meth:`~taskflow.atom.Atom.revert`
-.. |retry.execute| replace:: :py:meth:`~taskflow.retry.Retry.execute`
-.. |retry.revert| replace:: :py:meth:`~taskflow.retry.Retry.revert`
-.. |Retry| replace:: :py:class:`~taskflow.retry.Retry`
-.. |Task| replace:: :py:class:`Task <taskflow.task.Task>`
+.. |task.execute| replace:: :py:meth:`~zag.atom.Atom.execute`
+.. |task.revert| replace:: :py:meth:`~zag.atom.Atom.revert`
+.. |retry.execute| replace:: :py:meth:`~zag.retry.Retry.execute`
+.. |retry.revert| replace:: :py:meth:`~zag.retry.Retry.revert`
+.. |Retry| replace:: :py:class:`~zag.retry.Retry`
+.. |Task| replace:: :py:class:`Task <zag.task.Task>`
 
-In TaskFlow, all flow and task state goes to (potentially persistent) storage
+In Zag, all flow and task state goes to (potentially persistent) storage
 (see :doc:`persistence <persistence>` for more details). That includes all the
 information that :doc:`atoms <atoms>` (e.g. tasks, retry objects...) in the
 workflow need when they are executed, and all the information task/retry
@@ -39,7 +39,7 @@ are and how to use those ways to accomplish your desired usage pattern.
 
 .. testsetup::
 
-    from taskflow import task
+    from zag import task
 
 
 Arguments specification
@@ -255,7 +255,7 @@ and passed to the task |task.revert| or retry |retry.revert| method).
     Provides arguments tuple can also be longer then the actual tuple returned
     by task -- when this happens the extra parameters are left undefined: a
     warning is printed to logs and if use of such parameter is attempted a
-    :py:class:`~taskflow.exceptions.NotFound`  exception is raised.
+    :py:class:`~zag.exceptions.NotFound`  exception is raised.
 
 Returning a dictionary
 ++++++++++++++++++++++
@@ -272,7 +272,7 @@ Another option is to return several values as a dictionary (aka a ``dict``).
                 'pieces': 'PIECEs'
             }
 
-TaskFlow expects that a dict will be returned if ``provides`` argument is a
+Zag expects that a dict will be returned if ``provides`` argument is a
 ``set``:
 
 ::
@@ -296,7 +296,7 @@ will be able to get elements from storage by name:
     and passed to the |task.revert| method). If the provides argument has some
     items not present in the actual dict returned by the task -- then extra
     parameters are left undefined: a warning is printed to logs and if use of
-    such parameter is attempted a :py:class:`~taskflow.exceptions.NotFound`
+    such parameter is attempted a :py:class:`~zag.exceptions.NotFound`
     exception is raised.
 
 Default provides
@@ -347,7 +347,7 @@ For ``result`` value, two cases are possible:
 
 * If the task is being reverted because it failed (an exception was raised
   from its |task.execute| method), the ``result`` value is an instance of a
-  :py:class:`~taskflow.types.failure.Failure` object that holds the exception
+  :py:class:`~zag.types.failure.Failure` object that holds the exception
   information.
 
 * If the task is being reverted because some other task failed, and this task
@@ -358,9 +358,9 @@ All other arguments are fetched from storage in the same way it is done for
 |task.execute| method.
 
 To determine if a task failed you can check whether ``result`` is instance of
-:py:class:`~taskflow.types.failure.Failure`::
+:py:class:`~zag.types.failure.Failure`::
 
-    from taskflow.types import failure
+    from zag.types import failure
 
     class RevertingTask(task.Task):
 
@@ -384,11 +384,11 @@ Retry arguments
 
 A |Retry| controller works with arguments in the same way as a |Task|. But it
 has an additional parameter ``'history'`` that is itself a
-:py:class:`~taskflow.retry.History` object that contains what failed over all
+:py:class:`~zag.retry.History` object that contains what failed over all
 the engines attempts (aka the outcomes). The history object can be
 viewed as a tuple that contains a result of the previous retries run and a
 table/dict where each key is a failed atoms name and each value is
-a :py:class:`~taskflow.types.failure.Failure` object.
+a :py:class:`~zag.types.failure.Failure` object.
 
 Consider the following implementation::
 
@@ -420,7 +420,7 @@ their behavior.
 
 If instead the |retry.execute| method itself raises an exception,
 the |retry.revert| method of the implementation will be called and
-a :py:class:`~taskflow.types.failure.Failure` object will be present in the
+a :py:class:`~zag.types.failure.Failure` object will be present in the
 history object instead of the typical result.
 
 .. note::

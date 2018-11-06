@@ -10,10 +10,10 @@ Engines are what **really** runs your atoms.
 An *engine* takes a flow structure (described by :doc:`patterns <patterns>`)
 and uses it to decide which :doc:`atom <atoms>` to run and when.
 
-TaskFlow provides different implementations of engines. Some may be easier to
+Zag provides different implementations of engines. Some may be easier to
 use (ie, require no additional infrastructure setup) and understand; others
 might require more complicated setup but provide better scalability. The idea
-and *ideal* is that deployers or developers of a service that use TaskFlow can
+and *ideal* is that deployers or developers of a service that use Zag can
 select an engine that suites their setup best without modifying the code of
 said service.
 
@@ -31,7 +31,7 @@ Why they exist
 An engine being *the* core component which actually makes your flows progress
 is likely a new concept for many programmers so let's describe how it operates
 in more depth and some of the reasoning behind why it exists. This will
-hopefully make it more clear on their value add to the TaskFlow library user.
+hopefully make it more clear on their value add to the Zag library user.
 
 First though let us discuss something most are familiar already with; the
 difference between `declarative`_ and `imperative`_ programming models. The
@@ -42,7 +42,7 @@ This kind of program embeds the *how* to accomplish a goal while also defining
 on the stack while these statements execute). In contrast there is the
 declarative model which instead of combining the *how* to accomplish a goal
 along side the *what* is to be accomplished splits these two into only
-declaring what the intended goal is and not the *how*. In TaskFlow terminology
+declaring what the intended goal is and not the *how*. In Zag terminology
 the *what* is the structure of your flows and the tasks and other atoms you
 have inside those flows, but the *how* is not defined (the line becomes blurred
 since tasks themselves contain imperative code, but for now consider a task as
@@ -113,10 +113,10 @@ All engines are mere classes that implement the same interface, and of course
 it is possible to import them and create instances just like with any classes
 in Python. But the easier (and recommended) way for creating an engine is using
 the engine helper functions. All of these functions are imported into the
-``taskflow.engines`` module namespace, so the typical usage of these functions
+``zag.engines`` module namespace, so the typical usage of these functions
 might look like::
 
-    from taskflow import engines
+    from zag import engines
 
     ...
     flow = make_flow()
@@ -125,7 +125,7 @@ might look like::
     ...
 
 
-.. automodule:: taskflow.engines.helpers
+.. automodule:: zag.engines.helpers
 
 Usage
 =====
@@ -143,7 +143,7 @@ Serial
 **Engine type**: ``'serial'``
 
 Runs all tasks on a single thread -- the same thread
-:py:meth:`~taskflow.engines.base.Engine.run` is called from.
+:py:meth:`~zag.engines.base.Engine.run` is called from.
 
 .. note::
 
@@ -164,7 +164,7 @@ Parallel
 
 A parallel engine schedules tasks onto different threads/processes to allow for
 running non-dependent tasks simultaneously. See the documentation of
-:py:class:`~taskflow.engines.action_engine.engine.ParallelActionEngine` for
+:py:class:`~zag.engines.action_engine.engine.ParallelActionEngine` for
 supported arguments that can be used to construct a parallel engine that runs
 using your desired execution model.
 
@@ -201,7 +201,7 @@ How they run
 To provide a peek into the general process that an engine goes through when
 running lets break it apart a little and describe what one of the engine types
 does while executing (for this we will look into the
-:py:class:`~taskflow.engines.action_engine.engine.ActionEngine` engine type).
+:py:class:`~zag.engines.action_engine.engine.ActionEngine` engine type).
 
 Creation
 --------
@@ -216,10 +216,10 @@ are setup.
 Compiling
 ---------
 
-During this stage (see :py:func:`~taskflow.engines.base.Engine.compile`) the
+During this stage (see :py:func:`~zag.engines.base.Engine.compile`) the
 flow will be converted into an internal graph representation using a
 compiler (the default implementation for patterns is the
-:py:class:`~taskflow.engines.action_engine.compiler.PatternCompiler`). This
+:py:class:`~zag.engines.action_engine.compiler.PatternCompiler`). This
 class compiles/converts the flow objects and contained atoms into a
 `networkx`_ directed graph (and tree structure) that contains the equivalent
 atoms defined in the flow and any nested flows & atoms as well as the
@@ -229,23 +229,23 @@ the engines execution. At this point a few helper object are also created and
 saved to internal engine variables (these object help in execution of
 atoms, analyzing the graph and performing other internal engine
 activities). At the finishing of this stage a
-:py:class:`~taskflow.engines.action_engine.runtime.Runtime` object is created
+:py:class:`~zag.engines.action_engine.runtime.Runtime` object is created
 which contains references to all needed runtime components and its
-:py:func:`~taskflow.engines.action_engine.runtime.Runtime.compile` is called
+:py:func:`~zag.engines.action_engine.runtime.Runtime.compile` is called
 to compile a cache of frequently used execution helper objects.
 
 Preparation
 -----------
 
-This stage (see :py:func:`~taskflow.engines.base.Engine.prepare`) starts by
+This stage (see :py:func:`~zag.engines.base.Engine.prepare`) starts by
 setting up the storage needed for all atoms in the compiled graph, ensuring
-that corresponding :py:class:`~taskflow.persistence.models.AtomDetail` (or
+that corresponding :py:class:`~zag.persistence.models.AtomDetail` (or
 subclass of) objects are created for each node in the graph.
 
 Validation
 ----------
 
-This stage (see :py:func:`~taskflow.engines.base.Engine.validate`) performs
+This stage (see :py:func:`~zag.engines.base.Engine.validate`) performs
 any final validation of the compiled (and now storage prepared) engine. It
 compares the requirements that are needed to start execution and
 what is currently provided or will be produced in the future. If there are
@@ -256,9 +256,9 @@ Execution
 ---------
 
 The graph (and helper objects) previously created are now used for guiding
-further execution (see :py:func:`~taskflow.engines.base.Engine.run`). The
+further execution (see :py:func:`~zag.engines.base.Engine.run`). The
 flow is put into the ``RUNNING`` :doc:`state <states>` and a
-:py:class:`~taskflow.engines.action_engine.builder.MachineBuilder` state
+:py:class:`~zag.engines.action_engine.builder.MachineBuilder` state
 machine object and runner object are built (using the `automaton`_ library).
 That machine and associated runner then starts to take over and begins going
 through the stages listed below (for a more visual diagram/representation see
@@ -267,7 +267,7 @@ the :ref:`engine state diagram <engine states>`).
 .. note::
 
    The engine will respect the constraints imposed by the flow. For example,
-   if an engine is executing a :py:class:`~taskflow.patterns.linear_flow.Flow`
+   if an engine is executing a :py:class:`~zag.patterns.linear_flow.Flow`
    then it is constrained by the dependency graph which is linear in this
    case, and hence using a parallel engine may not yield any benefits if one
    is looking for concurrency.
@@ -284,10 +284,10 @@ analyzing the current state of the task; which is determined by looking at the
 state in the task detail object for that task and analyzing edges of the graph
 for things like retry atom which can influence what a tasks intention should be
 (this is aided by the usage of the
-:py:class:`~taskflow.engines.action_engine.selector.Selector` helper
+:py:class:`~zag.engines.action_engine.selector.Selector` helper
 object which was designed to provide helper methods for this analysis). Once
 these intentions are determined and associated with each task (the intention is
-also stored in the :py:class:`~taskflow.persistence.models.AtomDetail` object)
+also stored in the :py:class:`~zag.persistence.models.AtomDetail` object)
 the :ref:`scheduling <scheduling>` stage starts.
 
 .. _scheduling:
@@ -296,13 +296,13 @@ Scheduling
 ^^^^^^^^^^
 
 This stage selects which atoms are eligible to run by using a
-:py:class:`~taskflow.engines.action_engine.scheduler.Scheduler` implementation
+:py:class:`~zag.engines.action_engine.scheduler.Scheduler` implementation
 (the default implementation looks at their intention, checking if predecessor
 atoms have ran and so-on, using a
-:py:class:`~taskflow.engines.action_engine.selector.Selector` helper
+:py:class:`~zag.engines.action_engine.selector.Selector` helper
 object as needed) and submits those atoms to a previously provided compatible
 `executor`_ for asynchronous execution. This
-:py:class:`~taskflow.engines.action_engine.scheduler.Scheduler` will return a
+:py:class:`~zag.engines.action_engine.scheduler.Scheduler` will return a
 `future`_ object for each atom scheduled; all of which are collected into a
 list of not done futures. This will end the initial round of scheduling and at
 this point the engine enters the :ref:`waiting <waiting>` stage.
@@ -315,11 +315,11 @@ Waiting
 In this stage the engine waits for any of the future objects previously
 submitted to complete. Once one of the future objects completes (or fails) that
 atoms result will be examined and finalized using a
-:py:class:`~taskflow.engines.action_engine.completer.Completer` implementation.
+:py:class:`~zag.engines.action_engine.completer.Completer` implementation.
 It typically will persist results to a provided persistence backend (saved
-into the corresponding :py:class:`~taskflow.persistence.models.AtomDetail`
-and :py:class:`~taskflow.persistence.models.FlowDetail` objects via the
-:py:class:`~taskflow.storage.Storage` helper) and reflect
+into the corresponding :py:class:`~zag.persistence.models.AtomDetail`
+and :py:class:`~zag.persistence.models.FlowDetail` objects via the
+:py:class:`~zag.storage.Storage` helper) and reflect
 the new state of the atom. At this point what typically happens falls into two
 categories, one for if that atom failed and one for if it did not. If the atom
 failed it may be set to a new intention such as ``RETRY`` or
@@ -340,7 +340,7 @@ Finishing
 ---------
 
 At this point the machine (and runner) that was built using the
-:py:class:`~taskflow.engines.action_engine.builder.MachineBuilder` class has
+:py:class:`~zag.engines.action_engine.builder.MachineBuilder` class has
 now finished successfully, failed, or the execution was suspended. Depending on
 which one of these occurs will cause the flow to enter a new state (typically
 one of ``FAILURE``, ``SUSPENDED``, ``SUCCESS`` or ``REVERTED``).
@@ -359,26 +359,26 @@ Special cases
 Suspension
 ----------
 
-Each engine implements a :py:func:`~taskflow.engines.base.Engine.suspend`
+Each engine implements a :py:func:`~zag.engines.base.Engine.suspend`
 method that can be used to *externally* (or in the future *internally*) request
 that the engine stop :ref:`scheduling <scheduling>` new work. By default what
 this performs is a transition of the flow state from ``RUNNING`` into a
 ``SUSPENDING`` state (which will later transition into a ``SUSPENDED`` state).
 Since an engine may be remotely executing atoms (or locally executing them)
 and there is currently no preemption what occurs is that the engines
-:py:class:`~taskflow.engines.action_engine.builder.MachineBuilder` state
+:py:class:`~zag.engines.action_engine.builder.MachineBuilder` state
 machine will detect this transition into ``SUSPENDING`` has occurred and the
 state machine will avoid scheduling new work (it will though let active work
 continue). After the current work has finished the engine will
 transition from ``SUSPENDING`` into ``SUSPENDED`` and return from its
-:py:func:`~taskflow.engines.base.Engine.run` method.
+:py:func:`~zag.engines.base.Engine.run` method.
 
 
 .. note::
 
-    When :py:func:`~taskflow.engines.base.Engine.run`  is returned from at that
+    When :py:func:`~zag.engines.base.Engine.run`  is returned from at that
     point there *may* (but does not have to be, depending on what was active
-    when :py:func:`~taskflow.engines.base.Engine.suspend` was called) be
+    when :py:func:`~zag.engines.base.Engine.suspend` was called) be
     unfinished work in the flow that was not finished (but which can be
     resumed at a later point in time).
 
@@ -396,10 +396,10 @@ Default strategy
 ----------------
 
 When an engine is executing it internally interacts with the
-:py:class:`~taskflow.storage.Storage` class
+:py:class:`~zag.storage.Storage` class
 and that class interacts with the a
-:py:class:`~taskflow.engines.action_engine.scopes.ScopeWalker` instance
-and the :py:class:`~taskflow.storage.Storage` class uses the following
+:py:class:`~zag.engines.action_engine.scopes.ScopeWalker` instance
+and the :py:class:`~zag.storage.Storage` class uses the following
 lookup order to find (or fail) a atoms requirement lookup/request:
 
 #. Transient injected atom specific arguments.
@@ -411,7 +411,7 @@ lookup order to find (or fail) a atoms requirement lookup/request:
    walkers yielded ordering defines what *first* means) that produced that
    result *and* can be extracted without raising an error is selected as the
    provider of the requested requirement.
-#. Fails with :py:class:`~taskflow.exceptions.NotFound` if unresolved at this
+#. Fails with :py:class:`~zag.exceptions.NotFound` if unresolved at this
    point (the ``cause`` attribute of this exception may have more details on
    why the lookup failed).
 
@@ -427,12 +427,12 @@ lookup order to find (or fail) a atoms requirement lookup/request:
 Interfaces
 ==========
 
-.. automodule:: taskflow.engines.base
+.. automodule:: zag.engines.base
 
 Implementations
 ===============
 
-.. automodule:: taskflow.engines.action_engine.engine
+.. automodule:: zag.engines.action_engine.engine
 
 Components
 ----------
@@ -444,26 +444,26 @@ Components
     other locations **without** notice (and without the typical deprecation
     cycle).
 
-.. automodule:: taskflow.engines.action_engine.builder
-.. automodule:: taskflow.engines.action_engine.compiler
-.. automodule:: taskflow.engines.action_engine.completer
-.. automodule:: taskflow.engines.action_engine.deciders
-.. automodule:: taskflow.engines.action_engine.executor
-.. automodule:: taskflow.engines.action_engine.process_executor
-.. automodule:: taskflow.engines.action_engine.runtime
-.. automodule:: taskflow.engines.action_engine.scheduler
-.. automodule:: taskflow.engines.action_engine.selector
-.. autoclass:: taskflow.engines.action_engine.scopes.ScopeWalker
+.. automodule:: zag.engines.action_engine.builder
+.. automodule:: zag.engines.action_engine.compiler
+.. automodule:: zag.engines.action_engine.completer
+.. automodule:: zag.engines.action_engine.deciders
+.. automodule:: zag.engines.action_engine.executor
+.. automodule:: zag.engines.action_engine.process_executor
+.. automodule:: zag.engines.action_engine.runtime
+.. automodule:: zag.engines.action_engine.scheduler
+.. automodule:: zag.engines.action_engine.selector
+.. autoclass:: zag.engines.action_engine.scopes.ScopeWalker
     :special-members: __iter__
-.. automodule:: taskflow.engines.action_engine.traversal
+.. automodule:: zag.engines.action_engine.traversal
 
 Hierarchy
 =========
 
 .. inheritance-diagram::
-    taskflow.engines.action_engine.engine.ActionEngine
-    taskflow.engines.base.Engine
-    taskflow.engines.worker_based.engine.WorkerBasedActionEngine
+    zag.engines.action_engine.engine.ActionEngine
+    zag.engines.base.Engine
+    zag.engines.worker_based.engine.WorkerBasedActionEngine
     :parts: 1
 
 .. _automaton: https://docs.openstack.org/automaton/latest/

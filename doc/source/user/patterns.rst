@@ -2,33 +2,33 @@
 Patterns
 --------
 
-.. automodule:: taskflow.flow
+.. automodule:: zag.flow
 
 
 Linear flow
 ~~~~~~~~~~~
 
-.. automodule:: taskflow.patterns.linear_flow
+.. automodule:: zag.patterns.linear_flow
 
 
 Unordered flow
 ~~~~~~~~~~~~~~
 
-.. automodule:: taskflow.patterns.unordered_flow
+.. automodule:: zag.patterns.unordered_flow
 
 
 Graph flow
 ~~~~~~~~~~
 
-.. automodule:: taskflow.patterns.graph_flow
-.. automodule:: taskflow.deciders
+.. automodule:: zag.patterns.graph_flow
+.. automodule:: zag.deciders
 
 Hierarchy
 ~~~~~~~~~
 
 .. inheritance-diagram::
-    taskflow.flow
-    taskflow.patterns.linear_flow
-    taskflow.patterns.unordered_flow
-    taskflow.patterns.graph_flow
+    zag.flow
+    zag.patterns.linear_flow
+    zag.patterns.unordered_flow
+    zag.patterns.graph_flow
     :parts: 2

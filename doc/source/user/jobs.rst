@@ -5,7 +5,7 @@ Jobs
 Overview
 ========
 
-Jobs and jobboards are a **novel** concept that TaskFlow provides to allow for
+Jobs and jobboards are a **novel** concept that Zag provides to allow for
 automatic ownership transfer of workflows between capable owners (those owners
 usually then use :doc:`engines <engines>` to complete the workflow). They
 provide the necessary semantics to be able to atomically transfer a job from a
@@ -28,21 +28,21 @@ Definitions
 ===========
 
 Jobs
-  A :py:class:`job <taskflow.jobs.base.Job>` consists of a unique identifier,
+  A :py:class:`job <zag.jobs.base.Job>` consists of a unique identifier,
   name, and a reference to a :py:class:`logbook
-  <taskflow.persistence.models.LogBook>` which contains the details of the
+  <zag.persistence.models.LogBook>` which contains the details of the
   work that has been or should be/will be completed to finish the work that has
   been created for that job.
 
 Jobboards
-  A :py:class:`jobboard <taskflow.jobs.base.JobBoard>` is responsible for
+  A :py:class:`jobboard <zag.jobs.base.JobBoard>` is responsible for
   managing the posting, ownership, and delivery of jobs. It acts as the
   location where jobs can be posted, claimed and searched for; typically by
   iteration or notification.  Jobboards may be backed by different *capable*
   implementations (each with potentially differing configuration) but all
   jobboards implement the same interface and semantics so that the backend
   usage is as transparent as possible. This allows deployers or developers of a
-  service that uses TaskFlow to select a jobboard implementation that fits
+  service that uses Zag to select a jobboard implementation that fits
   their setup (and their intended usage) best.
 
 High level architecture
@@ -103,7 +103,7 @@ Usage
 All jobboards are mere classes that implement same interface, and of course
 it is possible to import them and create instances of them just like with any
 other class in Python. But the easier (and recommended) way for creating
-jobboards is by using the :py:meth:`fetch() <taskflow.jobs.backends.fetch>`
+jobboards is by using the :py:meth:`fetch() <zag.jobs.backends.fetch>`
 function which uses entrypoints (internally using `stevedore`_) to fetch and
 configure your backend.
 
@@ -112,8 +112,8 @@ of a job) might look like:
 
 .. code-block:: python
 
-    from taskflow.persistence import backends as persistence_backends
-    from taskflow.jobs import backends as job_backends
+    from zag.persistence import backends as persistence_backends
+    from zag.jobs import backends as job_backends
 
     ...
     persistence = persistence_backends.fetch({
@@ -137,9 +137,9 @@ might look like:
 
     import time
 
-    from taskflow import exceptions as exc
-    from taskflow.persistence import backends as persistence_backends
-    from taskflow.jobs import backends as job_backends
+    from zag import exceptions as exc
+    from zag.persistence import backends as persistence_backends
+    from zag.jobs import backends as job_backends
 
     ...
     my_name = 'worker-1'
@@ -177,23 +177,23 @@ might look like:
 
 There are a few ways to provide arguments to the flow.  The first option is to
 add a ``store`` to the flowdetail object in the
-:py:class:`logbook <taskflow.persistence.models.LogBook>`.
+:py:class:`logbook <zag.persistence.models.LogBook>`.
 
 You can also provide a ``store`` in the
-:py:class:`job <taskflow.jobs.base.Job>` itself when posting it to the
+:py:class:`job <zag.jobs.base.Job>` itself when posting it to the
 job board.  If both ``store`` values are found, they will be combined,
-with the :py:class:`job <taskflow.jobs.base.Job>` ``store``
-overriding the :py:class:`logbook <taskflow.persistence.models.LogBook>`
+with the :py:class:`job <zag.jobs.base.Job>` ``store``
+overriding the :py:class:`logbook <zag.persistence.models.LogBook>`
 ``store``.
 
 .. code-block:: python
 
     from oslo_utils import uuidutils
 
-    from taskflow import engines
-    from taskflow.persistence import backends as persistence_backends
-    from taskflow.persistence import models
-    from taskflow.jobs import backends as job_backends
+    from zag import engines
+    from zag.persistence import backends as persistence_backends
+    from zag.persistence import models
+    from zag.jobs import backends as job_backends
 
 
     ...
@@ -259,7 +259,7 @@ Additional *kwarg* parameters:
 Additional *configuration* parameters:
 
 * ``path``: the root zookeeper path to store job information (*defaults* to
-  ``/taskflow/jobs``)
+  ``/zag/jobs``)
 * ``hosts``: the list of zookeeper hosts to connect to (*defaults* to
   ``localhost:2181``); only used if a client is not provided.
 * ``timeout``: the timeout used when performing operations with zookeeper;
@@ -271,7 +271,7 @@ Additional *configuration* parameters:
 
 .. note::
 
-    See :py:class:`~taskflow.jobs.backends.impl_zookeeper.ZookeeperJobBoard`
+    See :py:class:`~zag.jobs.backends.impl_zookeeper.ZookeeperJobBoard`
     for implementation details.
 
 Redis
@@ -285,7 +285,7 @@ optionally expire after a given amount of time).
 
 .. note::
 
-    See :py:class:`~taskflow.jobs.backends.impl_redis.RedisJobBoard`
+    See :py:class:`~zag.jobs.backends.impl_redis.RedisJobBoard`
     for implementation details.
 
 Considerations
@@ -340,8 +340,8 @@ the claim by then, therefore both would be *working* on a job.
 Interfaces
 ==========
 
-.. automodule:: taskflow.jobs.base
-.. automodule:: taskflow.jobs.backends
+.. automodule:: zag.jobs.base
+.. automodule:: zag.jobs.backends
 
 Implementations
 ===============
@@ -349,23 +349,23 @@ Implementations
 Zookeeper
 ---------
 
-.. automodule:: taskflow.jobs.backends.impl_zookeeper
+.. automodule:: zag.jobs.backends.impl_zookeeper
 
 Redis
 -----
 
-.. automodule:: taskflow.jobs.backends.impl_redis
+.. automodule:: zag.jobs.backends.impl_redis
 
 Hierarchy
 =========
 
 .. inheritance-diagram::
-    taskflow.jobs.base
-    taskflow.jobs.backends.impl_redis
-    taskflow.jobs.backends.impl_zookeeper
+    zag.jobs.base
+    zag.jobs.backends.impl_redis
+    zag.jobs.backends.impl_zookeeper
     :parts: 1
 
-.. _paradigm shift: https://wiki.openstack.org/wiki/TaskFlow/Paradigm_shifts#Workflow_ownership_transfer
+.. _paradigm shift: https://wiki.openstack.org/wiki/Zag/Paradigm_shifts#Workflow_ownership_transfer
 .. _zookeeper: http://zookeeper.apache.org/
 .. _kazoo: https://kazoo.readthedocs.io/en/latest/
 .. _stevedore: https://docs.openstack.org/stevedore/latest

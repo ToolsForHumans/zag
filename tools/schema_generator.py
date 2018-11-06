@@ -20,7 +20,7 @@ import re
 import six
 import tabulate
 
-from taskflow.persistence.backends import impl_sqlalchemy
+from zag.persistence.backends import impl_sqlalchemy
 
 NAME_MAPPING = {
     'flowdetails': 'Flow details',

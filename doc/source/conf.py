@@ -21,8 +21,8 @@ extensions = [
 ]
 
 # openstackdocstheme options
-repository_name = 'openstack/taskflow'
-bug_project = 'taskflow'
+repository_name = 'ToolsForHumans/zag'
+bug_project = 'zag'
 bug_tag = ''
 html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
@@ -44,9 +44,9 @@ master_doc = 'index'
 exclude_patterns = ['_build']
 
 # General information about the project.
-project = u'TaskFlow'
-copyright = u'%s, OpenStack Foundation' % datetime.date.today().year
-source_tree = 'https://git.openstack.org/cgit/openstack/taskflow/tree'
+project = u'Zag'
+copyright = u'%s, ToolsForHumans' % datetime.date.today().year
+source_tree = 'https://github.com/ToolsForHumans/zag/tree'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = True
@@ -59,11 +59,11 @@ add_module_names = True
 pygments_style = 'sphinx'
 
 # Prefixes that are ignored for sorting the Python module index
-modindex_common_prefix = ['taskflow.']
+modindex_common_prefix = ['zag.']
 
 # Shortened external links.
 extlinks = {
-    'example': (source_tree + '/taskflow/examples/%s.py', ''),
+    'example': (source_tree + '/zag/examples/%s.py', ''),
     'pybug': ('http://bugs.python.org/issue%s', ''),
 }
 

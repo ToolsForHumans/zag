@@ -60,6 +60,3 @@ doc/build/
 
 .idea
 env
-
-# files created by releasenotes build
-releasenotes/build

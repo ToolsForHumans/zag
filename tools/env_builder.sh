@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This sets up a developer testing environment that can be used with various
-# openstack projects (mainly for taskflow, but for others it should work
+# zag projects (mainly for zag, but for others it should work
 # fine also).
 #
 # Some things to note:
@@ -90,12 +90,12 @@ $pip_27 install -q 'tox>=1.6.1,<1.7.0'
 
 Box "Setting up mysql..."
 service $mysqld restart
-/usr/bin/mysql --user="root" --execute='CREATE DATABASE 'openstack_citest''
+/usr/bin/mysql --user="root" --execute='CREATE DATABASE 'zag_citest''
 cat << EOF > $build_dir/mysql.sql
-CREATE USER 'openstack_citest'@'localhost' IDENTIFIED BY 'openstack_citest';
-CREATE USER 'openstack_citest' IDENTIFIED BY 'openstack_citest';
-GRANT ALL PRIVILEGES ON *.* TO 'openstack_citest'@'localhost';
-GRANT ALL PRIVILEGES ON *.* TO 'openstack_citest';
+CREATE USER 'zag_citest'@'localhost' IDENTIFIED BY 'zag_citest';
+CREATE USER 'zag_citest' IDENTIFIED BY 'zag_citest';
+GRANT ALL PRIVILEGES ON *.* TO 'zag_citest'@'localhost';
+GRANT ALL PRIVILEGES ON *.* TO 'zag_citest';
 FLUSH PRIVILEGES;
 EOF
 /usr/bin/mysql --user="root" < $build_dir/mysql.sql

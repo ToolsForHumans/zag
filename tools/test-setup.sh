@@ -12,8 +12,8 @@ DB_ROOT_PW=${MYSQL_ROOT_PW:-insecure_slave}
 
 # This user and its password are used by the tests, if you change it,
 # your tests might fail.
-DB_USER=openstack_citest
-DB_PW=openstack_citest
+DB_USER=zag_citest
+DB_PW=zag_citest
 
 sudo -H mysqladmin -u root password $DB_ROOT_PW
 
@@ -29,8 +29,8 @@ sudo -H mysql -u root -p$DB_ROOT_PW -h localhost -e "
 # Now create our database.
 mysql -u $DB_USER -p$DB_PW -h 127.0.0.1 -e "
     SET default_storage_engine=MYISAM;
-    DROP DATABASE IF EXISTS openstack_citest;
-    CREATE DATABASE openstack_citest CHARACTER SET utf8;"
+    DROP DATABASE IF EXISTS zag_citest;
+    CREATE DATABASE zag_citest CHARACTER SET utf8;"
 
 # Same for PostgreSQL
 
@@ -50,5 +50,5 @@ EOF
 chmod 0600 $HOME/.pgpass
 
 # Now create our database
-psql -h 127.0.0.1 -U $DB_USER -d template1 -c "DROP DATABASE IF EXISTS openstack_citest"
-createdb -h 127.0.0.1 -U $DB_USER -l C -T template0 -E utf8 openstack_citest
+psql -h 127.0.0.1 -U $DB_USER -d template1 -c "DROP DATABASE IF EXISTS zag_citest"
+createdb -h 127.0.0.1 -U $DB_USER -l C -T template0 -E utf8 zag_citest

@@ -5,7 +5,7 @@ Atoms, tasks and retries
 Atom
 ====
 
-An :py:class:`atom <taskflow.atom.Atom>` is the smallest unit in TaskFlow which
+An :py:class:`atom <zag.atom.Atom>` is the smallest unit in Zag which
 acts as the base for other classes (its naming was inspired from the
 similarities between this type and `atoms`_ in the physical world). Atoms
 have a name and may have a version. An atom is expected to name desired input
@@ -16,17 +16,17 @@ values (requirements) and name outputs (provided values).
     For more details about atom inputs and outputs please visit
     :doc:`arguments and results <arguments_and_results>`.
 
-.. automodule:: taskflow.atom
+.. automodule:: zag.atom
 
 .. _atoms: http://en.wikipedia.org/wiki/Atom
 
 Task
 =====
 
-A :py:class:`task <taskflow.task.Task>` (derived from an atom) is a
+A :py:class:`task <zag.task.Task>` (derived from an atom) is a
 unit of work that can have an execute & rollback sequence associated with
 it (they are *nearly* analogous to functions). Your task objects should all
-derive from :py:class:`~taskflow.task.Task` which defines what a task must
+derive from :py:class:`~zag.task.Task` which defines what a task must
 provide in terms of properties and methods.
 
 **For example:**
@@ -38,14 +38,14 @@ provide in terms of properties and methods.
 
 Currently the following *provided* types of task subclasses are:
 
-* :py:class:`~taskflow.task.Task`: useful for inheriting from and creating your
+* :py:class:`~zag.task.Task`: useful for inheriting from and creating your
   own subclasses.
-* :py:class:`~taskflow.task.FunctorTask`: useful for wrapping existing
+* :py:class:`~zag.task.FunctorTask`: useful for wrapping existing
   functions into task objects.
 
 .. note::
 
-    :py:class:`~taskflow.task.FunctorTask` task types can not currently be used
+    :py:class:`~zag.task.FunctorTask` task types can not currently be used
     with the :doc:`worker based engine <workers>` due to the fact that
     arbitrary functions can not be guaranteed to be correctly
     located (especially if they are lambda or anonymous functions) on the
@@ -54,7 +54,7 @@ Currently the following *provided* types of task subclasses are:
 Retry
 =====
 
-A :py:class:`retry <taskflow.retry.Retry>` (derived from an atom) is a special
+A :py:class:`retry <zag.retry.Retry>` (derived from an atom) is a special
 unit of work that handles errors, controls flow execution and can (for
 example) retry other atoms with other parameters if needed. When an associated
 atom fails, these retry units are *consulted* to determine what the resolution
@@ -63,35 +63,35 @@ will suggest a *strategy* for getting around the failure (perhaps by retrying,
 reverting a single atom, or reverting everything contained in the retries
 associated `scope`_).
 
-Currently derivatives of the :py:class:`retry <taskflow.retry.Retry>` base
-class must provide a :py:func:`~taskflow.retry.Retry.on_failure` method to
+Currently derivatives of the :py:class:`retry <zag.retry.Retry>` base
+class must provide a :py:func:`~zag.retry.Retry.on_failure` method to
 determine how a failure should be handled. The current enumeration(s) that can
-be returned from the :py:func:`~taskflow.retry.Retry.on_failure` method
+be returned from the :py:func:`~zag.retry.Retry.on_failure` method
 are defined in an enumeration class described here:
 
-.. autoclass:: taskflow.retry.Decision
+.. autoclass:: zag.retry.Decision
 
 To aid in the reconciliation process the
-:py:class:`retry <taskflow.retry.Retry>` base class also mandates
-:py:func:`~taskflow.retry.Retry.execute`
-and :py:func:`~taskflow.retry.Retry.revert` methods (although subclasses
+:py:class:`retry <zag.retry.Retry>` base class also mandates
+:py:func:`~zag.retry.Retry.execute`
+and :py:func:`~zag.retry.Retry.revert` methods (although subclasses
 are allowed to define these methods as no-ops) that can be used by a retry
 atom to interact with the runtime execution model (for example, to track the
 number of times it has been called which is useful for
-the :py:class:`~taskflow.retry.ForEach` retry subclass).
+the :py:class:`~zag.retry.ForEach` retry subclass).
 
 To avoid recreating common retry patterns the following provided retry
 subclasses are provided:
 
-* :py:class:`~taskflow.retry.AlwaysRevert`: Always reverts subflow.
-* :py:class:`~taskflow.retry.AlwaysRevertAll`: Always reverts the whole flow.
-* :py:class:`~taskflow.retry.Times`: Retries subflow given number of times.
-* :py:class:`~taskflow.retry.ForEach`: Allows for providing different values
+* :py:class:`~zag.retry.AlwaysRevert`: Always reverts subflow.
+* :py:class:`~zag.retry.AlwaysRevertAll`: Always reverts the whole flow.
+* :py:class:`~zag.retry.Times`: Retries subflow given number of times.
+* :py:class:`~zag.retry.ForEach`: Allows for providing different values
   to subflow atoms each time a failure occurs (making it possibly to resolve
   the failure by altering subflow atoms inputs).
-* :py:class:`~taskflow.retry.ParameterizedForEach`: Same as
-  :py:class:`~taskflow.retry.ForEach` but extracts values from storage
-  instead of the :py:class:`~taskflow.retry.ForEach` constructor.
+* :py:class:`~zag.retry.ParameterizedForEach`: Same as
+  :py:class:`~zag.retry.ForEach` but extracts values from storage
+  instead of the :py:class:`~zag.retry.ForEach` constructor.
 
 .. _scope: http://en.wikipedia.org/wiki/Scope_%28computer_science%29
 
@@ -130,11 +130,11 @@ Usage examples
 
 .. testsetup::
 
-    import taskflow
-    from taskflow import task
-    from taskflow import retry
-    from taskflow.patterns import linear_flow
-    from taskflow import engines
+    import zag
+    from zag import task
+    from zag import retry
+    from zag.patterns import linear_flow
+    from zag import engines
 
 .. doctest::
 
@@ -152,9 +152,9 @@ Usage examples
     ...     EchoTask('t4'))
 
 In this example the flow ``f2`` has a retry controller ``r1``, that is an
-instance of the default retry controller :py:class:`~taskflow.retry.ForEach`,
+instance of the default retry controller :py:class:`~zag.retry.ForEach`,
 it accepts a collection of values and iterates over this collection when
-each failure occurs. On each run :py:class:`~taskflow.retry.ForEach` retry
+each failure occurs. On each run :py:class:`~zag.retry.ForEach` retry
 returns the next value from the collection and stops retrying a subflow if
 there are no more values left in the collection. For example if tasks ``t2`` or
 ``t3`` fail, then the flow ``f2`` will be reverted and retry ``r1`` will retry
@@ -197,25 +197,25 @@ it reaches the last one, then the flow will be reverted.
 Interfaces
 ==========
 
-.. automodule:: taskflow.task
-.. autoclass:: taskflow.retry.Retry
-.. autoclass:: taskflow.retry.History
-.. autoclass:: taskflow.retry.AlwaysRevert
-.. autoclass:: taskflow.retry.AlwaysRevertAll
-.. autoclass:: taskflow.retry.Times
-.. autoclass:: taskflow.retry.ForEach
-.. autoclass:: taskflow.retry.ParameterizedForEach
+.. automodule:: zag.task
+.. autoclass:: zag.retry.Retry
+.. autoclass:: zag.retry.History
+.. autoclass:: zag.retry.AlwaysRevert
+.. autoclass:: zag.retry.AlwaysRevertAll
+.. autoclass:: zag.retry.Times
+.. autoclass:: zag.retry.ForEach
+.. autoclass:: zag.retry.ParameterizedForEach
 
 Hierarchy
 =========
 
 .. inheritance-diagram::
-    taskflow.atom
-    taskflow.task
-    taskflow.retry.Retry
-    taskflow.retry.AlwaysRevert
-    taskflow.retry.AlwaysRevertAll
-    taskflow.retry.Times
-    taskflow.retry.ForEach
-    taskflow.retry.ParameterizedForEach
+    zag.atom
+    zag.task
+    zag.retry.Retry
+    zag.retry.AlwaysRevert
+    zag.retry.AlwaysRevertAll
+    zag.retry.Times
+    zag.retry.ForEach
+    zag.retry.ParameterizedForEach
     :parts: 1

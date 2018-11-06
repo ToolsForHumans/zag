@@ -1,27 +1,23 @@
 ================
- Using TaskFlow
+ Using Zag
 ================
 
 Considerations
 ==============
 
 Things to consider before (and during) development and integration with
-TaskFlow into your project:
+Zag into your project:
 
-* Read over the `paradigm shifts`_ and engage the team in `IRC`_ (or via the
-  `openstack-dev`_ mailing list) if these need more explanation (prefix
-  ``[Oslo][TaskFlow]`` to your emails subject to get an even faster
-  response).
+* Read over the `paradigm shifts`_ and engage the team in `Slack` (or via
+  Github Issues).
 * Follow (or at least attempt to follow) some of the established
   `best practices`_ (feel free to add your own suggested best practices).
 * Keep in touch with the team (see above); we are all friendly and enjoy
   knowing your use cases and learning how we can help make your lives easier
   by adding or adjusting functionality in this library.
 
-.. _IRC: irc://chat.freenode.net/openstack-state-management
-.. _best practices: https://wiki.openstack.org/wiki/TaskFlow/Best_practices
-.. _paradigm shifts: https://wiki.openstack.org/wiki/TaskFlow/Paradigm_shifts
-.. _openstack-dev: mailto:openstack-dev@lists.openstack.org
+.. _best practices: https://wiki.openstack.org/wiki/Zag/Best_practices
+.. _paradigm shifts: https://wiki.openstack.org/wiki/Zag/Paradigm_shifts
 
 User Guide
 ==========

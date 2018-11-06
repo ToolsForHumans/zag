@@ -8,7 +8,7 @@ Overview
 In order to be able to receive inputs and create outputs from atoms (or other
 engine processes) in a fault-tolerant way, there is a need to be able to place
 what atoms output in some kind of location where it can be re-used by other
-atoms (or used for other purposes). To accommodate this type of usage TaskFlow
+atoms (or used for other purposes). To accommodate this type of usage Zag
 provides an abstraction (provided by pluggable `stevedore`_ backends) that is
 similar in concept to a running programs *memory*.
 
@@ -38,41 +38,41 @@ How it is used
 
 On :doc:`engine <engines>` construction typically a backend (it can be
 optional) will be provided which satisfies the
-:py:class:`~taskflow.persistence.base.Backend` abstraction. Along with
+:py:class:`~zag.persistence.base.Backend` abstraction. Along with
 providing a backend object a
-:py:class:`~taskflow.persistence.models.FlowDetail` object will also be
+:py:class:`~zag.persistence.models.FlowDetail` object will also be
 created and provided (this object will contain the details about the flow to be
 ran) to the engine constructor (or associated :py:meth:`load()
-<taskflow.engines.helpers.load>` helper functions).  Typically a
-:py:class:`~taskflow.persistence.models.FlowDetail` object is created from a
-:py:class:`~taskflow.persistence.models.LogBook` object (the book object acts
-as a type of container for :py:class:`~taskflow.persistence.models.FlowDetail`
-and :py:class:`~taskflow.persistence.models.AtomDetail` objects).
+<zag.engines.helpers.load>` helper functions).  Typically a
+:py:class:`~zag.persistence.models.FlowDetail` object is created from a
+:py:class:`~zag.persistence.models.LogBook` object (the book object acts
+as a type of container for :py:class:`~zag.persistence.models.FlowDetail`
+and :py:class:`~zag.persistence.models.AtomDetail` objects).
 
 **Preparation**: Once an engine starts to run it will create a
-:py:class:`~taskflow.storage.Storage` object which will act as the engines
+:py:class:`~zag.storage.Storage` object which will act as the engines
 interface to the underlying backend storage objects (it provides helper
 functions that are commonly used by the engine, avoiding repeating code when
 interacting with the provided
-:py:class:`~taskflow.persistence.models.FlowDetail` and
-:py:class:`~taskflow.persistence.base.Backend` objects). As an engine
+:py:class:`~zag.persistence.models.FlowDetail` and
+:py:class:`~zag.persistence.base.Backend` objects). As an engine
 initializes it will extract (or create)
-:py:class:`~taskflow.persistence.models.AtomDetail` objects for each atom in
+:py:class:`~zag.persistence.models.AtomDetail` objects for each atom in
 the workflow the engine will be executing.
 
 **Execution:** When an engine beings to execute (see :doc:`engine <engines>`
 for more of the details about how an engine goes about this process) it will
 examine any previously existing
-:py:class:`~taskflow.persistence.models.AtomDetail` objects to see if they can
+:py:class:`~zag.persistence.models.AtomDetail` objects to see if they can
 be used for resuming; see :doc:`resumption <resumption>` for more details on
 this subject. For atoms which have not finished (or did not finish correctly
 from a previous run) they will begin executing only after any dependent inputs
 are ready. This is done by analyzing the execution graph and looking at
-predecessor :py:class:`~taskflow.persistence.models.AtomDetail` outputs and
+predecessor :py:class:`~zag.persistence.models.AtomDetail` outputs and
 states (which may have been persisted in a past run). This will result in
 either using their previous information or by running those predecessors and
-saving their output to the :py:class:`~taskflow.persistence.models.FlowDetail`
-and :py:class:`~taskflow.persistence.base.Backend` objects. This
+saving their output to the :py:class:`~zag.persistence.models.FlowDetail`
+and :py:class:`~zag.persistence.base.Backend` objects. This
 execution, analysis and interaction with the storage objects continues (what is
 described here is a simplification of what really happens; which is quite a bit
 more complex) until the engine has finished running (at which point the engine
@@ -116,7 +116,7 @@ Usage
 =====
 
 To select which persistence backend to use you should use the :py:meth:`fetch()
-<taskflow.persistence.backends.fetch>` function which uses entrypoints
+<zag.persistence.backends.fetch>` function which uses entrypoints
 (internally using `stevedore`_) to fetch and configure your backend. This makes
 it simpler than accessing the backend data types directly and provides a common
 function from which a backend can be fetched.
@@ -125,7 +125,7 @@ Using this function to fetch a backend might look like:
 
 .. code-block:: python
 
-    from taskflow.persistence import backends
+    from zag.persistence import backends
 
     ...
     persistence = backends.fetch(conf={
@@ -157,7 +157,7 @@ for scenarios where persistence is not required (and also in unit tests).
 
 .. note::
 
-    See :py:class:`~taskflow.persistence.backends.impl_memory.MemoryBackend`
+    See :py:class:`~zag.persistence.backends.impl_memory.MemoryBackend`
     for implementation details.
 
 Files
@@ -173,7 +173,7 @@ concept everyone is familiar with).
 
 .. note::
 
-    See :py:class:`~taskflow.persistence.backends.impl_dir.DirBackend`
+    See :py:class:`~zag.persistence.backends.impl_dir.DirBackend`
     for implementation details.
 
 SQLAlchemy
@@ -240,7 +240,7 @@ parent_uuid  VARCHAR   False
 
 .. note::
 
-    See :py:class:`~taskflow.persistence.backends.impl_sqlalchemy.SQLAlchemyBackend`
+    See :py:class:`~zag.persistence.backends.impl_sqlalchemy.SQLAlchemyBackend`
     for implementation details.
 
 .. warning::
@@ -254,7 +254,7 @@ parent_uuid  VARCHAR   False
     ``traditional`` when selecting your mysql + sqlalchemy based
     backend (see the `mysql modes`_ documentation for what this implies).
 
-.. _1416088: https://bugs.launchpad.net/taskflow/+bug/1416088
+.. _1416088: https://bugs.launchpad.net/zag/+bug/1416088
 .. _mysql modes: https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html
 
 Zookeeper
@@ -272,7 +272,7 @@ as the database connection types listed previously).
 
 .. note::
 
-    See :py:class:`~taskflow.persistence.backends.impl_zookeeper.ZkBackend`
+    See :py:class:`~zag.persistence.backends.impl_zookeeper.ZkBackend`
     for implementation details.
 
 .. _zookeeper: http://zookeeper.apache.org
@@ -281,14 +281,14 @@ as the database connection types listed previously).
 Interfaces
 ==========
 
-.. automodule:: taskflow.persistence.backends
-.. automodule:: taskflow.persistence.base
-.. automodule:: taskflow.persistence.path_based
+.. automodule:: zag.persistence.backends
+.. automodule:: zag.persistence.base
+.. automodule:: zag.persistence.path_based
 
 Models
 ======
 
-.. automodule:: taskflow.persistence.models
+.. automodule:: zag.persistence.models
 
 Implementations
 ===============
@@ -296,35 +296,35 @@ Implementations
 Memory
 ------
 
-.. automodule:: taskflow.persistence.backends.impl_memory
+.. automodule:: zag.persistence.backends.impl_memory
 
 Files
 -----
 
-.. automodule:: taskflow.persistence.backends.impl_dir
+.. automodule:: zag.persistence.backends.impl_dir
 
 SQLAlchemy
 ----------
 
-.. automodule:: taskflow.persistence.backends.impl_sqlalchemy
+.. automodule:: zag.persistence.backends.impl_sqlalchemy
 
 Zookeeper
 ---------
 
-.. automodule:: taskflow.persistence.backends.impl_zookeeper
+.. automodule:: zag.persistence.backends.impl_zookeeper
 
 Storage
 =======
 
-.. automodule:: taskflow.storage
+.. automodule:: zag.storage
 
 Hierarchy
 =========
 
 .. inheritance-diagram::
-    taskflow.persistence.base
-    taskflow.persistence.backends.impl_dir
-    taskflow.persistence.backends.impl_memory
-    taskflow.persistence.backends.impl_sqlalchemy
-    taskflow.persistence.backends.impl_zookeeper
+    zag.persistence.base
+    zag.persistence.backends.impl_dir
+    zag.persistence.backends.impl_memory
+    zag.persistence.backends.impl_sqlalchemy
+    zag.persistence.backends.impl_zookeeper
     :parts: 2

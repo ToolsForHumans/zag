@@ -13,10 +13,10 @@ atoms we need to create a model and corresponding information that allows us to
 persist the *right* amount of information to preserve, resume, and rollback a
 flow on software or hardware failure.
 
-To allow for resumption TaskFlow must be able to re-create the flow and
+To allow for resumption Zag must be able to re-create the flow and
 re-connect the links between atom (and between atoms->atom details and so on)
 in order to revert those atoms or resume those atoms in the correct ordering.
-TaskFlow provides a pattern that can help in automating this process (it does
+Zag provides a pattern that can help in automating this process (it does
 **not** prohibit the user from creating their own strategies for doing this).
 
 .. _resumption factories:
@@ -27,7 +27,7 @@ Factories
 The default provided way is to provide a `factory`_ function which will create
 (or recreate your workflow). This function can be provided when loading a flow
 and corresponding engine via the provided :py:meth:`load_from_factory()
-<taskflow.engines.helpers.load_from_factory>` method. This `factory`_ function
+<zag.engines.helpers.load_from_factory>` method. This `factory`_ function
 is expected to be a function (or ``staticmethod``) which is reimportable (aka
 has a well defined name that can be located by the ``__import__`` function in
 python, this excludes ``lambda`` style functions and ``instance`` methods). The
@@ -46,7 +46,7 @@ name serves a special purpose in the resumption process (as well as serving a
 useful purpose when running, allowing for atom identification in the
 :doc:`notification <notifications>` process). The reason for having names is
 that an atom in a flow needs to be somehow  matched with (a potentially)
-existing :py:class:`~taskflow.persistence.models.AtomDetail` during engine
+existing :py:class:`~zag.persistence.models.AtomDetail` during engine
 resumption & subsequent running.
 
 The match should be:
@@ -71,9 +71,9 @@ Scenarios
 =========
 
 When new flow is loaded into engine, there is no persisted data for it yet, so
-a corresponding :py:class:`~taskflow.persistence.models.FlowDetail` object
+a corresponding :py:class:`~zag.persistence.models.FlowDetail` object
 will be created, as well as a
-:py:class:`~taskflow.persistence.models.AtomDetail` object for each atom that
+:py:class:`~zag.persistence.models.AtomDetail` object for each atom that
 is contained in it. These will be immediately saved into the persistence
 backend that is configured. If no persistence backend is configured, then as
 expected nothing will be saved and the atoms and flow will be ran in a
@@ -94,7 +94,7 @@ When the factory function mentioned above returns the exact same the flow and
 atoms (no changes are performed).
 
 **Runtime change:** Nothing should be done -- the engine will re-associate
-atoms with :py:class:`~taskflow.persistence.models.AtomDetail` objects by name
+atoms with :py:class:`~zag.persistence.models.AtomDetail` objects by name
 and then the engine resumes.
 
 Atom was added
@@ -105,7 +105,7 @@ in (for example for changing the runtime structure of what was previously ran
 in the first run).
 
 **Runtime change:** By default when the engine resumes it will notice that a
-corresponding :py:class:`~taskflow.persistence.models.AtomDetail` does not
+corresponding :py:class:`~zag.persistence.models.AtomDetail` does not
 exist and one will be created and associated.
 
 Atom was removed
@@ -131,10 +131,10 @@ some kind of upgrade or to fix a bug in a prior atoms code).
 factory should replace this name where it was being used previously.
 
 **Runtime change:** This will fall under the same runtime adjustments that
-exist when a new atom is added. In the future TaskFlow could make this easier
+exist when a new atom is added. In the future Zag could make this easier
 by providing a ``upgrade()`` function that can be used to give users the
 ability to upgrade atoms before running (manual introspection & modification of
-a :py:class:`~taskflow.persistence.models.LogBook` can be done before engine
+a :py:class:`~zag.persistence.models.LogBook` can be done before engine
 loading and running to accomplish this in the meantime).
 
 Atom was split in two atoms or merged
@@ -146,11 +146,11 @@ decides that N atoms should be merged in <N atoms (typically occurring during
 refactoring).
 
 **Runtime change:** This will fall under the same runtime adjustments that
-exist when a new atom is added or removed. In the future TaskFlow could make
+exist when a new atom is added or removed. In the future Zag could make
 this easier by providing a ``migrate()`` function that can be used to give
 users the ability to migrate atoms previous data before running (manual
 introspection & modification of a
-:py:class:`~taskflow.persistence.models.LogBook` can be done before engine
+:py:class:`~zag.persistence.models.LogBook` can be done before engine
 loading and running to accomplish this in the meantime).
 
 Flow structure was changed

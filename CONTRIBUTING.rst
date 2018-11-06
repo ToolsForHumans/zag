@@ -1,16 +1,10 @@
-If you would like to contribute to the development of OpenStack,
-you must follow the steps documented at:
+Zag follows the standard Github fork and pull-request model of contribution.
 
-   https://docs.openstack.org/infra/manual/developers.html#development-workflow
+https://github.com/ToolsForHumans/zag/pulls
 
-Once those steps have been completed, changes to OpenStack
-should be submitted for review via the Gerrit tool, following
-the workflow documented at:
+Issues can be reported using Github Issues.
 
-   https://docs.openstack.org/infra/manual/developers.html#development-workflow
+https://github.com/ToolsForHumans/zag/issues
 
-Pull requests submitted through GitHub will be ignored.
-
-Bugs should be filed on Launchpad, not GitHub:
-
-   https://bugs.launchpad.net/taskflow
+PRs will be rejected unless all tests pass, so please do a full tox run
+before submitting.

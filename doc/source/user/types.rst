@@ -15,36 +15,36 @@ Types
 Entity
 ======
 
-.. automodule:: taskflow.types.entity
+.. automodule:: zag.types.entity
 
 Failure
 =======
 
-.. automodule:: taskflow.types.failure
+.. automodule:: zag.types.failure
 
 Graph
 =====
 
-.. automodule:: taskflow.types.graph
+.. automodule:: zag.types.graph
 
 Notifier
 ========
 
-.. automodule:: taskflow.types.notifier
+.. automodule:: zag.types.notifier
     :special-members: __call__
 
 Sets
 ====
 
-.. automodule:: taskflow.types.sets
+.. automodule:: zag.types.sets
 
 Timing
 ======
 
-.. automodule:: taskflow.types.timing
+.. automodule:: zag.types.timing
 
 Tree
 ====
 
-.. automodule:: taskflow.types.tree
+.. automodule:: zag.types.tree
 

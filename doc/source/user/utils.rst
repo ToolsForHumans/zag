@@ -11,59 +11,59 @@ Utilities
 Async
 ~~~~~
 
-.. automodule:: taskflow.utils.async_utils
+.. automodule:: zag.utils.async_utils
 
 Banner
 ~~~~~~
 
-.. automodule:: taskflow.utils.banner
+.. automodule:: zag.utils.banner
 
 Eventlet
 ~~~~~~~~
 
-.. automodule:: taskflow.utils.eventlet_utils
+.. automodule:: zag.utils.eventlet_utils
 
 Iterators
 ~~~~~~~~~
 
-.. automodule:: taskflow.utils.iter_utils
+.. automodule:: zag.utils.iter_utils
 
 Kazoo
 ~~~~~
 
-.. automodule:: taskflow.utils.kazoo_utils
+.. automodule:: zag.utils.kazoo_utils
 
 Kombu
 ~~~~~
 
-.. automodule:: taskflow.utils.kombu_utils
+.. automodule:: zag.utils.kombu_utils
 
 Miscellaneous
 ~~~~~~~~~~~~~
 
-.. automodule:: taskflow.utils.misc
+.. automodule:: zag.utils.misc
 
 Mixins
 ~~~~~~
 
-.. automodule:: taskflow.utils.mixins
+.. automodule:: zag.utils.mixins
 
 Persistence
 ~~~~~~~~~~~
 
-.. automodule:: taskflow.utils.persistence_utils
+.. automodule:: zag.utils.persistence_utils
 
 Redis
 ~~~~~
 
-.. automodule:: taskflow.utils.redis_utils
+.. automodule:: zag.utils.redis_utils
 
 Schema
 ~~~~~~
 
-.. automodule:: taskflow.utils.schema_utils
+.. automodule:: zag.utils.schema_utils
 
 Threading
 ~~~~~~~~~
 
-.. automodule:: taskflow.utils.threading_utils
+.. automodule:: zag.utils.threading_utils

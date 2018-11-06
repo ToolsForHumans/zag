@@ -58,15 +58,15 @@ claimable state.
 #. Forcefully delete jobs that have been failing continuously after a given
    number of conductor attempts. This can be either done manually or
    automatically via scripts (or other associated monitoring) or via
-   the jobboards :py:func:`~taskflow.jobs.base.JobBoard.trash` method.
+   the jobboards :py:func:`~zag.jobs.base.JobBoard.trash` method.
 #. Resolve the internal error's cause (storage backend failure, other...).
 
 Interfaces
 ==========
 
-.. automodule:: taskflow.conductors.base
-.. automodule:: taskflow.conductors.backends
-.. automodule:: taskflow.conductors.backends.impl_executor
+.. automodule:: zag.conductors.base
+.. automodule:: zag.conductors.backends
+.. automodule:: zag.conductors.backends.impl_executor
 
 Implementations
 ===============
@@ -74,21 +74,21 @@ Implementations
 Blocking
 --------
 
-.. automodule:: taskflow.conductors.backends.impl_blocking
+.. automodule:: zag.conductors.backends.impl_blocking
 
 Non-blocking
 ------------
 
-.. automodule:: taskflow.conductors.backends.impl_nonblocking
+.. automodule:: zag.conductors.backends.impl_nonblocking
 
 Hierarchy
 =========
 
 .. inheritance-diagram::
-    taskflow.conductors.base
-    taskflow.conductors.backends.impl_blocking
-    taskflow.conductors.backends.impl_nonblocking
-    taskflow.conductors.backends.impl_executor
+    zag.conductors.base
+    zag.conductors.backends.impl_blocking
+    zag.conductors.backends.impl_nonblocking
+    zag.conductors.backends.impl_executor
     :parts: 1
 
 .. _musical conductors: http://en.wikipedia.org/wiki/Conducting

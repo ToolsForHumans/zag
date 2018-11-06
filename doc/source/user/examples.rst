@@ -2,12 +2,12 @@
  Examples
 ==========
 
-While developing TaskFlow the team has worked *hard* to make sure the various
+While developing Zag the team has worked *hard* to make sure the various
 concepts are explained by *relevant* examples. Here are a few selected examples
 to get started (ordered by *perceived* complexity):
 
 To explore more of these examples please check out the `examples`_ directory
-in the TaskFlow `source tree`_.
+in the Zag `source tree`_.
 
 .. note::
 
@@ -16,8 +16,8 @@ in the TaskFlow `source tree`_.
     improve them. The higher the quality and the clearer the examples are the
     better and more useful they are for everyone.
 
-.. _examples: http://git.openstack.org/cgit/openstack/taskflow/tree/taskflow/examples
-.. _source tree: http://git.openstack.org/cgit/openstack/taskflow/
+.. _examples: http://git.openstack.org/cgit/openstack/zag/tree/zag/examples
+.. _source tree: http://git.openstack.org/cgit/openstack/zag/
 
 Hello world
 ===========
@@ -26,7 +26,7 @@ Hello world
 
     Full source located at :example:`hello_world`.
 
-.. literalinclude:: ../../../taskflow/examples/hello_world.py
+.. literalinclude:: ../../../zag/examples/hello_world.py
     :language: python
     :linenos:
     :lines: 16-
@@ -38,7 +38,7 @@ Passing values from and to tasks
 
     Full source located at :example:`simple_linear_pass`.
 
-.. literalinclude:: ../../../taskflow/examples/simple_linear_pass.py
+.. literalinclude:: ../../../zag/examples/simple_linear_pass.py
     :language: python
     :linenos:
     :lines: 16-
@@ -50,7 +50,7 @@ Using listeners
 
     Full source located at :example:`echo_listener`.
 
-.. literalinclude:: ../../../taskflow/examples/echo_listener.py
+.. literalinclude:: ../../../zag/examples/echo_listener.py
     :language: python
     :linenos:
     :lines: 16-
@@ -62,7 +62,7 @@ Using listeners (to watch a phone call)
 
     Full source located at :example:`simple_linear_listening`.
 
-.. literalinclude:: ../../../taskflow/examples/simple_linear_listening.py
+.. literalinclude:: ../../../zag/examples/simple_linear_listening.py
     :language: python
     :linenos:
     :lines: 16-
@@ -74,7 +74,7 @@ Dumping a in-memory backend
 
     Full source located at :example:`dump_memory_backend`.
 
-.. literalinclude:: ../../../taskflow/examples/dump_memory_backend.py
+.. literalinclude:: ../../../zag/examples/dump_memory_backend.py
     :language: python
     :linenos:
     :lines: 16-
@@ -86,7 +86,7 @@ Making phone calls
 
     Full source located at :example:`simple_linear`.
 
-.. literalinclude:: ../../../taskflow/examples/simple_linear.py
+.. literalinclude:: ../../../zag/examples/simple_linear.py
     :language: python
     :linenos:
     :lines: 16-
@@ -98,7 +98,7 @@ Making phone calls (automatically reverting)
 
     Full source located at :example:`reverting_linear`.
 
-.. literalinclude:: ../../../taskflow/examples/reverting_linear.py
+.. literalinclude:: ../../../zag/examples/reverting_linear.py
     :language: python
     :linenos:
     :lines: 16-
@@ -110,7 +110,7 @@ Building a car
 
     Full source located at :example:`build_a_car`.
 
-.. literalinclude:: ../../../taskflow/examples/build_a_car.py
+.. literalinclude:: ../../../zag/examples/build_a_car.py
     :language: python
     :linenos:
     :lines: 16-
@@ -122,7 +122,7 @@ Iterating over the alphabet (using processes)
 
     Full source located at :example:`alphabet_soup`.
 
-.. literalinclude:: ../../../taskflow/examples/alphabet_soup.py
+.. literalinclude:: ../../../zag/examples/alphabet_soup.py
     :language: python
     :linenos:
     :lines: 16-
@@ -134,7 +134,7 @@ Watching execution timing
 
     Full source located at :example:`timing_listener`.
 
-.. literalinclude:: ../../../taskflow/examples/timing_listener.py
+.. literalinclude:: ../../../zag/examples/timing_listener.py
     :language: python
     :linenos:
     :lines: 16-
@@ -146,7 +146,7 @@ Distance calculator
 
     Full source located at :example:`distance_calculator`
 
-.. literalinclude:: ../../../taskflow/examples/distance_calculator.py
+.. literalinclude:: ../../../zag/examples/distance_calculator.py
     :language: python
     :linenos:
     :lines: 16-
@@ -158,7 +158,7 @@ Table multiplier (in parallel)
 
     Full source located at :example:`parallel_table_multiply`
 
-.. literalinclude:: ../../../taskflow/examples/parallel_table_multiply.py
+.. literalinclude:: ../../../zag/examples/parallel_table_multiply.py
     :language: python
     :linenos:
     :lines: 16-
@@ -170,7 +170,7 @@ Linear equation solver (explicit dependencies)
 
     Full source located at :example:`calculate_linear`.
 
-.. literalinclude:: ../../../taskflow/examples/calculate_linear.py
+.. literalinclude:: ../../../zag/examples/calculate_linear.py
     :language: python
     :linenos:
     :lines: 16-
@@ -180,7 +180,7 @@ Linear equation solver (inferred dependencies)
 
 ``Source:`` :example:`graph_flow.py`
 
-.. literalinclude:: ../../../taskflow/examples/graph_flow.py
+.. literalinclude:: ../../../zag/examples/graph_flow.py
     :language: python
     :linenos:
     :lines: 16-
@@ -192,7 +192,7 @@ Linear equation solver (in parallel)
 
     Full source located at :example:`calculate_in_parallel`
 
-.. literalinclude:: ../../../taskflow/examples/calculate_in_parallel.py
+.. literalinclude:: ../../../zag/examples/calculate_in_parallel.py
     :language: python
     :linenos:
     :lines: 16-
@@ -204,7 +204,7 @@ Creating a volume (in parallel)
 
     Full source located at :example:`create_parallel_volume`
 
-.. literalinclude:: ../../../taskflow/examples/create_parallel_volume.py
+.. literalinclude:: ../../../zag/examples/create_parallel_volume.py
     :language: python
     :linenos:
     :lines: 16-
@@ -216,7 +216,7 @@ Summation mapper(s) and reducer (in parallel)
 
     Full source located at :example:`simple_map_reduce`
 
-.. literalinclude:: ../../../taskflow/examples/simple_map_reduce.py
+.. literalinclude:: ../../../zag/examples/simple_map_reduce.py
     :language: python
     :linenos:
     :lines: 16-
@@ -228,7 +228,7 @@ Sharing a thread pool executor (in parallel)
 
     Full source located at :example:`share_engine_thread`
 
-.. literalinclude:: ../../../taskflow/examples/share_engine_thread.py
+.. literalinclude:: ../../../zag/examples/share_engine_thread.py
     :language: python
     :linenos:
     :lines: 16-
@@ -240,7 +240,7 @@ Storing & emitting a bill
 
     Full source located at :example:`fake_billing`
 
-.. literalinclude:: ../../../taskflow/examples/fake_billing.py
+.. literalinclude:: ../../../zag/examples/fake_billing.py
     :language: python
     :linenos:
     :lines: 16-
@@ -252,7 +252,7 @@ Suspending a workflow & resuming
 
     Full source located at :example:`resume_from_backend`
 
-.. literalinclude:: ../../../taskflow/examples/resume_from_backend.py
+.. literalinclude:: ../../../zag/examples/resume_from_backend.py
     :language: python
     :linenos:
     :lines: 16-
@@ -264,7 +264,7 @@ Creating a virtual machine (resumable)
 
     Full source located at :example:`resume_vm_boot`
 
-.. literalinclude:: ../../../taskflow/examples/resume_vm_boot.py
+.. literalinclude:: ../../../zag/examples/resume_vm_boot.py
     :language: python
     :linenos:
     :lines: 16-
@@ -276,7 +276,7 @@ Creating a volume (resumable)
 
     Full source located at :example:`resume_volume_create`
 
-.. literalinclude:: ../../../taskflow/examples/resume_volume_create.py
+.. literalinclude:: ../../../zag/examples/resume_volume_create.py
     :language: python
     :linenos:
     :lines: 16-
@@ -288,7 +288,7 @@ Running engines via iteration
 
     Full source located at :example:`run_by_iter`
 
-.. literalinclude:: ../../../taskflow/examples/run_by_iter.py
+.. literalinclude:: ../../../zag/examples/run_by_iter.py
     :language: python
     :linenos:
     :lines: 16-
@@ -300,7 +300,7 @@ Controlling retries using a retry controller
 
     Full source located at :example:`retry_flow`
 
-.. literalinclude:: ../../../taskflow/examples/retry_flow.py
+.. literalinclude:: ../../../zag/examples/retry_flow.py
     :language: python
     :linenos:
     :lines: 16-
@@ -312,7 +312,7 @@ Distributed execution (simple)
 
     Full source located at :example:`wbe_simple_linear`
 
-.. literalinclude:: ../../../taskflow/examples/wbe_simple_linear.py
+.. literalinclude:: ../../../zag/examples/wbe_simple_linear.py
     :language: python
     :linenos:
     :lines: 16-
@@ -324,7 +324,7 @@ Distributed notification (simple)
 
     Full source located at :example:`wbe_event_sender`
 
-.. literalinclude:: ../../../taskflow/examples/wbe_event_sender.py
+.. literalinclude:: ../../../zag/examples/wbe_event_sender.py
     :language: python
     :linenos:
     :lines: 16-
@@ -347,7 +347,7 @@ Output
 Code
 ----
 
-.. literalinclude:: ../../../taskflow/examples/wbe_mandelbrot.py
+.. literalinclude:: ../../../zag/examples/wbe_mandelbrot.py
     :language: python
     :linenos:
     :lines: 16-
@@ -359,7 +359,7 @@ Jobboard producer/consumer (simple)
 
     Full source located at :example:`jobboard_produce_consume_colors`
 
-.. literalinclude:: ../../../taskflow/examples/jobboard_produce_consume_colors.py
+.. literalinclude:: ../../../zag/examples/jobboard_produce_consume_colors.py
     :language: python
     :linenos:
     :lines: 16-
@@ -371,7 +371,7 @@ Conductor simulating a CI pipeline
 
     Full source located at :example:`tox_conductor`
 
-.. literalinclude:: ../../../taskflow/examples/tox_conductor.py
+.. literalinclude:: ../../../zag/examples/tox_conductor.py
     :language: python
     :linenos:
     :lines: 16-
@@ -384,7 +384,7 @@ Conductor running 99 bottles of beer song requests
 
     Full source located at :example:`99_bottles`
 
-.. literalinclude:: ../../../taskflow/examples/99_bottles.py
+.. literalinclude:: ../../../zag/examples/99_bottles.py
     :language: python
     :linenos:
     :lines: 16-

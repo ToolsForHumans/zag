@@ -24,9 +24,9 @@ from oslo_utils import timeutils
 import six
 from six.moves import range as compat_range
 
-from taskflow import engines
-from taskflow.patterns import linear_flow as lf
-from taskflow import task
+from zag import engines
+from zag.patterns import linear_flow as lf
+from zag import task
 
 
 def print_header(name):

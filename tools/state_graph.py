@@ -27,9 +27,9 @@ sys.path.insert(0, top_dir)
 from automaton.converters import pydot
 from automaton import machines
 
-from taskflow.engines.action_engine import builder
-from taskflow.engines.worker_based import protocol
-from taskflow import states
+from zag.engines.action_engine import builder
+from zag.engines.worker_based import protocol
+from zag import states
 
 
 # This is just needed to get at the machine object (we will not

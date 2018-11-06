@@ -5,7 +5,7 @@
 set -e
 
 ZK_HOSTS=${ZK_HOSTS:-localhost:2181}
-TF_PATH=${TF_PATH:-taskflow}
+TF_PATH=${TF_PATH:-zag}
 
 for path in `zk-shell --run-once "ls" $ZK_HOSTS`; do
     if [[ $path == ${TF_PATH}* ]]; then

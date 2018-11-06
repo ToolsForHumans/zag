@@ -2,7 +2,7 @@
 Inputs and outputs
 ==================
 
-In TaskFlow there are multiple ways to provide inputs for your tasks and flows
+In Zag there are multiple ways to provide inputs for your tasks and flows
 and get information from them. This document describes one of them, that
 involves task arguments and results. There are also :doc:`notifications
 <notifications>`, which allow you to get notified when a task or flow changes
@@ -32,9 +32,9 @@ flow.
 
 .. testsetup::
 
-    from taskflow import task
-    from taskflow.patterns import linear_flow
-    from taskflow import engines
+    from zag import task
+    from zag.patterns import linear_flow
+    from zag import engines
     from pprint import pprint
 
 For example:
@@ -62,8 +62,8 @@ task.
 .. note::
 
    There is no difference between processing of
-   :py:class:`Task <taskflow.task.Task>` and
-   :py:class:`~taskflow.retry.Retry` inputs and outputs.
+   :py:class:`Task <zag.task.Task>` and
+   :py:class:`~zag.retry.Retry` inputs and outputs.
 
 ------------------
 Engine and storage
@@ -78,7 +78,7 @@ Inputs
 As mentioned above, if some value is required by one or more tasks of a flow,
 but is not provided by any task, it is considered to be flow input, and
 **must** be put into the storage before the flow is run. On failure to do
-so :py:class:`~taskflow.exceptions.MissingDependencies` is raised by the engine
+so :py:class:`~zag.exceptions.MissingDependencies` is raised by the engine
 prior to running:
 
 .. doctest::
@@ -95,17 +95,17 @@ prior to running:
    ...
    >>> flo = linear_flow.Flow("cat-dog")
    >>> flo.add(CatTalk(), DogTalk(provides="dog"))
-   <taskflow.patterns.linear_flow.Flow object at 0x...>
+   <zag.patterns.linear_flow.Flow object at 0x...>
    >>> engines.run(flo)
    Traceback (most recent call last):
       ...
-   taskflow.exceptions.MissingDependencies: 'linear_flow.Flow: cat-dog(len=2)' requires ['meow', 'woof'] but no other entity produces said requirements
+   zag.exceptions.MissingDependencies: 'linear_flow.Flow: cat-dog(len=2)' requires ['meow', 'woof'] but no other entity produces said requirements
     MissingDependencies: 'execute' method on '__main__.DogTalk==1.0' requires ['woof'] but no other entity produces said requirements
     MissingDependencies: 'execute' method on '__main__.CatTalk==1.0' requires ['meow'] but no other entity produces said requirements
 
 The recommended way to provide flow inputs is to use the ``store`` parameter
-of the engine helpers (:py:func:`~taskflow.engines.helpers.run` or
-:py:func:`~taskflow.engines.helpers.load`):
+of the engine helpers (:py:func:`~zag.engines.helpers.run` or
+:py:func:`~zag.engines.helpers.load`):
 
 .. doctest::
 
@@ -121,7 +121,7 @@ of the engine helpers (:py:func:`~taskflow.engines.helpers.run` or
    ...
    >>> flo = linear_flow.Flow("cat-dog")
    >>> flo.add(CatTalk(), DogTalk(provides="dog"))
-   <taskflow.patterns.linear_flow.Flow object at 0x...>
+   <zag.patterns.linear_flow.Flow object at 0x...>
    >>> result = engines.run(flo, store={'meow': 'meow', 'woof': 'woof'})
    meow
    woof
@@ -130,15 +130,15 @@ of the engine helpers (:py:func:`~taskflow.engines.helpers.run` or
 
 You can also directly interact with the engine storage layer to add additional
 values, note that if this route is used you can't use the helper method
-:py:func:`~taskflow.engines.helpers.run`. Instead,
+:py:func:`~zag.engines.helpers.run`. Instead,
 you must activate the engine's run method directly
-:py:func:`~taskflow.engines.base.EngineBase.run`:
+:py:func:`~zag.engines.base.EngineBase.run`:
 
 .. doctest::
 
    >>> flo = linear_flow.Flow("cat-dog")
    >>> flo.add(CatTalk(), DogTalk(provides="dog"))
-   <taskflow.patterns.linear_flow.Flow object at 0x...>
+   <zag.patterns.linear_flow.Flow object at 0x...>
    >>> eng = engines.load(flo, store={'meow': 'meow'})
    >>> eng.storage.inject({"woof": "bark"})
    >>> eng.run()
@@ -150,9 +150,9 @@ Outputs
 
 As you can see from examples above, the run method returns all flow outputs in
 a ``dict``. This same data can be fetched via
-:py:meth:`~taskflow.storage.Storage.fetch_all` method of the engines storage
+:py:meth:`~zag.storage.Storage.fetch_all` method of the engines storage
 object. You can also get single results using the
-engines storage objects :py:meth:`~taskflow.storage.Storage.fetch` method.
+engines storage objects :py:meth:`~zag.storage.Storage.fetch` method.
 
 For example:
 

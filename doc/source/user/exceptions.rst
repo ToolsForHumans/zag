@@ -3,7 +3,7 @@ Exceptions
 ----------
 
 .. inheritance-diagram::
-    taskflow.exceptions
+    zag.exceptions
     :parts: 1
 
-.. automodule:: taskflow.exceptions
+.. automodule:: zag.exceptions

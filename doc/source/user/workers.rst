@@ -11,7 +11,7 @@ connected via `amqp`_ (or other supported `kombu`_ transports).
     but is missing some features (please check the `blueprint page`_ for
     known issues and plans) that will make it more production ready.
 
-.. _blueprint page: https://blueprints.launchpad.net/taskflow?searchtext=wbe
+.. _blueprint page: https://blueprints.launchpad.net/zag?searchtext=wbe
 
 Terminology
 -----------
@@ -93,7 +93,7 @@ will be executed when that output is ready) are executed by the worker-based
 engine executor in the following manner:
 
 1. The executor initiates task execution/reversion using a proxy object.
-2. :py:class:`~taskflow.engines.worker_based.proxy.Proxy` publishes task
+2. :py:class:`~zag.engines.worker_based.proxy.Proxy` publishes task
    request (format is described below) into a named exchange using a routing
    key that is used to deliver request to particular workers topic. The
    executor then waits for the task requests to be accepted and confirmed by
@@ -107,7 +107,7 @@ engine executor in the following manner:
       executes the task).
    2. If dispatched succeeded then the worker sends a confirmation response
       to the executor otherwise the worker sends a failed response along with
-      a serialized :py:class:`failure <taskflow.types.failure.Failure>` object
+      a serialized :py:class:`failure <zag.types.failure.Failure>` object
       that contains what has failed (and why).
    3. The worker executes the task and once it is finished sends the result
       back to the originating executor (every time a task progress event is
@@ -124,7 +124,7 @@ engine executor in the following manner:
 
 .. note::
 
-    :py:class:`~taskflow.types.failure.Failure` objects are not directly
+    :py:class:`~zag.types.failure.Failure` objects are not directly
     json-serializable (they contain references to tracebacks which are not
     serializable), so they are converted to dicts before sending and converted
     from dicts after receiving on both executor & worker sides (this
@@ -135,7 +135,7 @@ engine executor in the following manner:
 Protocol
 ~~~~~~~~
 
-.. automodule:: taskflow.engines.worker_based.protocol
+.. automodule:: zag.engines.worker_based.protocol
 
 Examples
 ~~~~~~~~
@@ -148,7 +148,7 @@ Request (execute)
 * **action** - task action to be performed (e.g. execute, revert)
 * **arguments** - arguments the task action to be called with
 * **result** - task execution result (result or
-  :py:class:`~taskflow.types.failure.Failure`) *[passed to revert only]*
+  :py:class:`~zag.types.failure.Failure`) *[passed to revert only]*
 
 Additionally, the following parameters are added to the request message:
 
@@ -165,8 +165,8 @@ Additionally, the following parameters are added to the request message:
         "arguments": {
             "x": 111
         },
-        "task_cls": "taskflow.tests.utils.TaskOneArgOneReturn",
-        "task_name": "taskflow.tests.utils.TaskOneArgOneReturn",
+        "task_cls": "zag.tests.utils.TaskOneArgOneReturn",
+        "task_name": "zag.tests.utils.TaskOneArgOneReturn",
         "task_version": [
             1,
             0
@@ -185,14 +185,14 @@ When **reverting:**
         "action": "revert",
         "arguments": {},
         "failures": {
-            "taskflow.tests.utils.TaskWithFailure": {
+            "zag.tests.utils.TaskWithFailure": {
                 "exc_type_names": [
                     "RuntimeError",
                     "StandardError",
                     "Exception"
                 ],
                 "exception_str": "Woot!",
-                "traceback_str": "  File \"/homes/harlowja/dev/os/taskflow/taskflow/engines/action_engine/executor.py\", line 56, in _execute_task\n    result = task.execute(**arguments)\n  File \"/homes/harlowja/dev/os/taskflow/taskflow/tests/utils.py\", line 165, in execute\n    raise RuntimeError('Woot!')\n",
+                "traceback_str": "  File \"/homes/harlowja/dev/os/zag/zag/engines/action_engine/executor.py\", line 56, in _execute_task\n    result = task.execute(**arguments)\n  File \"/homes/harlowja/dev/os/zag/zag/tests/utils.py\", line 165, in execute\n    raise RuntimeError('Woot!')\n",
                 "version": 1
             }
         },
@@ -205,12 +205,12 @@ When **reverting:**
                     "Exception"
                 ],
                 "exception_str": "Woot!",
-                "traceback_str": "  File \"/homes/harlowja/dev/os/taskflow/taskflow/engines/action_engine/executor.py\", line 56, in _execute_task\n    result = task.execute(**arguments)\n  File \"/homes/harlowja/dev/os/taskflow/taskflow/tests/utils.py\", line 165, in execute\n    raise RuntimeError('Woot!')\n",
+                "traceback_str": "  File \"/homes/harlowja/dev/os/zag/zag/engines/action_engine/executor.py\", line 56, in _execute_task\n    result = task.execute(**arguments)\n  File \"/homes/harlowja/dev/os/zag/zag/tests/utils.py\", line 165, in execute\n    raise RuntimeError('Woot!')\n",
                 "version": 1
             }
         ],
-        "task_cls": "taskflow.tests.utils.TaskWithFailure",
-        "task_name": "taskflow.tests.utils.TaskWithFailure",
+        "task_cls": "zag.tests.utils.TaskWithFailure",
+        "task_name": "zag.tests.utils.TaskWithFailure",
         "task_version": [
             1,
             0
@@ -265,7 +265,7 @@ When **failed:**
                     "Exception"
                 ],
                 "exception_str": "Woot!",
-                "traceback_str": "  File \"/homes/harlowja/dev/os/taskflow/taskflow/engines/action_engine/executor.py\", line 56, in _execute_task\n    result = task.execute(**arguments)\n  File \"/homes/harlowja/dev/os/taskflow/taskflow/tests/utils.py\", line 165, in execute\n    raise RuntimeError('Woot!')\n",
+                "traceback_str": "  File \"/homes/harlowja/dev/os/zag/zag/engines/action_engine/executor.py\", line 56, in _execute_task\n    result = task.execute(**arguments)\n  File \"/homes/harlowja/dev/os/zag/zag/tests/utils.py\", line 165, in execute\n    raise RuntimeError('Woot!')\n",
                 "version": 1
             }
         },
@@ -313,8 +313,8 @@ or has failed).
     by implementing the blueprints associated with `failover`_ and
     `info/resilence`_.
 
-.. _failover: https://blueprints.launchpad.net/taskflow/+spec/wbe-worker-failover
-.. _info/resilence: https://blueprints.launchpad.net/taskflow/+spec/wbe-worker-info
+.. _failover: https://blueprints.launchpad.net/zag/+spec/wbe-worker-failover
+.. _info/resilence: https://blueprints.launchpad.net/zag/+spec/wbe-worker-info
 
 Usage
 =====
@@ -328,13 +328,13 @@ names, modules names (or entrypoints that can be examined for valid tasks) they
 can respond to (this is done so that arbitrary code execution is not possible).
 
 For complete parameters and object usage please visit
-:py:class:`~taskflow.engines.worker_based.worker.Worker`.
+:py:class:`~zag.engines.worker_based.worker.Worker`.
 
 **Example:**
 
 .. code:: python
 
-    from taskflow.engines.worker_based import worker as w
+    from zag.engines.worker_based import worker as w
 
     config = {
         'url': 'amqp://guest:guest@localhost:5672//',
@@ -356,14 +356,14 @@ correctly. Otherwise the usage should be mostly transparent (and is nearly
 identical to using any other engine type).
 
 For complete parameters and object usage please see
-:py:class:`~taskflow.engines.worker_based.engine.WorkerBasedActionEngine`.
+:py:class:`~zag.engines.worker_based.engine.WorkerBasedActionEngine`.
 
 **Example with amqp transport:**
 
 .. code:: python
 
     flow = lf.Flow('simple-linear').add(...)
-    eng = taskflow.engines.load(flow, engine='worker-based',
+    eng = zag.engines.load(flow, engine='worker-based',
                                 url='amqp://guest:guest@localhost:5672//',
                                 exchange='test-exchange',
                                 topics=['topic1', 'topic2'])
@@ -374,7 +374,7 @@ For complete parameters and object usage please see
 .. code:: python
 
     flow = lf.Flow('simple-linear').add(...)
-    eng = taskflow.engines.load(flow, engine='worker-based',
+    eng = zag.engines.load(flow, engine='worker-based',
                                 exchange='test-exchange',
                                 topics=['topic1', 'topic2'],
                                 transport='filesystem',
@@ -387,7 +387,7 @@ For complete parameters and object usage please see
 Additional supported keyword arguments:
 
 * ``executor``: a class that provides a
-  :py:class:`~taskflow.engines.worker_based.executor.WorkerTaskExecutor`
+  :py:class:`~zag.engines.worker_based.executor.WorkerTaskExecutor`
   interface; it will be used for executing, reverting and waiting for remote
   tasks.
 
@@ -416,7 +416,7 @@ Limitations
 Implementations
 ===============
 
-.. automodule:: taskflow.engines.worker_based.engine
+.. automodule:: zag.engines.worker_based.engine
 
 Components
 ----------
@@ -428,19 +428,19 @@ Components
     other locations **without** notice (and without the typical deprecation
     cycle).
 
-.. automodule:: taskflow.engines.worker_based.dispatcher
-.. automodule:: taskflow.engines.worker_based.endpoint
-.. automodule:: taskflow.engines.worker_based.executor
-.. automodule:: taskflow.engines.worker_based.proxy
-.. automodule:: taskflow.engines.worker_based.worker
-.. automodule:: taskflow.engines.worker_based.types
+.. automodule:: zag.engines.worker_based.dispatcher
+.. automodule:: zag.engines.worker_based.endpoint
+.. automodule:: zag.engines.worker_based.executor
+.. automodule:: zag.engines.worker_based.proxy
+.. automodule:: zag.engines.worker_based.worker
+.. automodule:: zag.engines.worker_based.types
 
 Finders and advertisers
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: taskflow.engines.worker_based.types.WorkerFinder
-.. autoclass:: taskflow.engines.worker_based.types.ProxyWorkerFinder
-.. autoclass:: taskflow.engines.worker_based.types.ToozWorkerAdvertiser
-.. autoclass:: taskflow.engines.worker_based.types.ToozWorkerFinder
+.. autoclass:: zag.engines.worker_based.types.WorkerFinder
+.. autoclass:: zag.engines.worker_based.types.ProxyWorkerFinder
+.. autoclass:: zag.engines.worker_based.types.ToozWorkerAdvertiser
+.. autoclass:: zag.engines.worker_based.types.ToozWorkerFinder
 
 .. _kombu: http://kombu.readthedocs.org/
