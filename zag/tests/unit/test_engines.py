@@ -1415,7 +1415,7 @@ class SerialEngineTest(EngineTaskTest,
             engine='serial',
             backend=self.backend,
             store=store,
-            **kwargs,
+            **kwargs
         )
 
     def test_correct_load(self):
@@ -1456,7 +1456,7 @@ class ParallelEngineWithThreadsTest(EngineTaskTest,
             engine='parallel',
             store=store,
             max_workers=self._EXECUTOR_WORKERS,
-            **kwargs,
+            **kwargs
         )
 
     def test_correct_load(self):
@@ -1502,7 +1502,7 @@ class ParallelEngineWithEventletTest(EngineTaskTest,
             engine='parallel',
             executor=executor,
             store=store,
-            **kwargs,
+            **kwargs
         )
 
 
@@ -1538,7 +1538,7 @@ class ParallelEngineWithProcessTest(EngineTaskTest,
             executor=executor,
             store=store,
             max_workers=self._EXECUTOR_WORKERS,
-            **kwargs,
+            **kwargs
         )
 
     def test_update_progress_notifications_proxied(self):
@@ -1648,7 +1648,7 @@ class WorkerBasedEngineTest(EngineTaskTest,
             flow_detail=flow_detail,
             backend=self.backend,
             store=store,
-            **kwargs,
+            **kwargs
         )
 
     def test_correct_load(self):
