@@ -437,8 +437,13 @@ class ToozWorkerAdvertiser(object):
     def retract(self):
         for group_id in self._join_groups:
             try:
+                self._coordinator.leave_group(group_id).get()
+            except coordination.MemberNotJoined:
+                pass
+
+            try:
                 self._coordinator.delete_group(group_id).get()
-            except coordination.GroupAlreadyExist:
+            except coordination.GroupNotEmpty:
                 pass
 
     @periodics.periodic(BEAT_PERIOD, run_immediately=True)
@@ -456,8 +461,8 @@ class ToozWorkerAdvertiser(object):
         self.advertise()
 
     def stop(self):
-        self._activator.stop()
         self.retract()
+        self._activator.stop()
 
 
 class ToozWorkerFinder(WorkerFinder):

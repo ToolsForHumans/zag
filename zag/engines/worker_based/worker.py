@@ -192,13 +192,13 @@ class Worker(object):
 
     def stop(self):
         """Stop the worker component(s)."""
-        self._server.stop()
-        if self._owns_executor:
-            self._executor.shutdown()
-
         advertiser = self._fetch_advertiser()
         if advertiser is not None:
             advertiser.stop()
+
+        self._server.stop()
+        if self._owns_executor:
+            self._executor.shutdown()
 
 
 if __name__ == '__main__':
