@@ -265,7 +265,7 @@ class LogBook(object):
     def __len__(self):
         return len(self._flowdetails_by_id)
 
-    def copy(self, retain_contents=True):
+    def copy(self, retain_contents=True, retain_uuid=True):
         """Copies this logbook.
 
         Creates a shallow copy of this logbook. If this logbook contains
@@ -280,12 +280,18 @@ class LogBook(object):
         :rtype: :py:class:`.LogBook`
         """
         clone = copy.copy(self)
+
+        if not retain_uuid:
+            clone._uuid = uuidutils.generate_uuid()
+
         if not retain_contents:
             clone._flowdetails_by_id = {}
         else:
             clone._flowdetails_by_id = self._flowdetails_by_id.copy()
+
         if self.meta:
             clone.meta = self.meta.copy()
+
         return clone
 
 

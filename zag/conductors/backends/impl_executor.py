@@ -300,6 +300,11 @@ class ExecutorConductor(base.Conductor):
                         self._log.debug("Job already claimed or"
                                         " consumed: %s", job)
                     else:
+                        self._notifier.notify("job_claimed", {
+                            'job': job,
+                            'conductor': self,
+                            'persistence': self._persistence,
+                        })
                         try:
                             fut = executor.submit(self._dispatch_job, job)
                         except RuntimeError:

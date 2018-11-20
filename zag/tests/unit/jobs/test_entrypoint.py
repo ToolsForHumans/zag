@@ -21,20 +21,25 @@ from zake import fake_client
 from zag.jobs import backends
 from zag.jobs.backends import impl_redis
 from zag.jobs.backends import impl_zookeeper
+from zag.persistence.backends import impl_memory
 from zag import test
 
 
 class BackendFetchingTest(test.TestCase):
     def test_zk_entry_point_text(self):
+        p = impl_memory.MemoryBackend()
         conf = 'zookeeper'
-        with contextlib.closing(backends.fetch('test', conf)) as be:
+        with contextlib.closing(backends.fetch('test', conf,
+                                               persistence=p)) as be:
             self.assertIsInstance(be, impl_zookeeper.ZookeeperJobBoard)
 
     def test_zk_entry_point(self):
+        p = impl_memory.MemoryBackend()
         conf = {
             'board': 'zookeeper',
         }
-        with contextlib.closing(backends.fetch('test', conf)) as be:
+        with contextlib.closing(backends.fetch('test', conf,
+                                               persistence=p)) as be:
             self.assertIsInstance(be, impl_zookeeper.ZookeeperJobBoard)
 
     def test_zk_entry_point_existing_client(self):
@@ -44,6 +49,7 @@ class BackendFetchingTest(test.TestCase):
         }
         kwargs = {
             'client': existing_client,
+            'persistence': impl_memory.MemoryBackend(),
         }
         with contextlib.closing(backends.fetch('test', conf, **kwargs)) as be:
             self.assertIsInstance(be, impl_zookeeper.ZookeeperJobBoard)
@@ -51,12 +57,16 @@ class BackendFetchingTest(test.TestCase):
 
     def test_redis_entry_point_text(self):
         conf = 'redis'
-        with contextlib.closing(backends.fetch('test', conf)) as be:
+        p = impl_memory.MemoryBackend()
+        with contextlib.closing(backends.fetch('test', conf,
+                                               persistence=p)) as be:
             self.assertIsInstance(be, impl_redis.RedisJobBoard)
 
     def test_redis_entry_point(self):
         conf = {
             'board': 'redis',
         }
-        with contextlib.closing(backends.fetch('test', conf)) as be:
+        p = impl_memory.MemoryBackend()
+        with contextlib.closing(backends.fetch('test', conf,
+                                               persistence=p)) as be:
             self.assertIsInstance(be, impl_redis.RedisJobBoard)

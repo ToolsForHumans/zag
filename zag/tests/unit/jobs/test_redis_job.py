@@ -22,11 +22,11 @@ import testtools
 
 from zag import exceptions as excp
 from zag.jobs.backends import impl_redis
+from zag.persistence.backends import impl_memory
 from zag import states
 from zag import test
 from zag.tests.unit.jobs import base
 from zag.tests import utils as test_utils
-from zag.utils import persistence_utils as p_utils
 from zag.utils import redis_utils as ru
 
 
@@ -40,6 +40,8 @@ class RedisJobboardTest(test.TestCase, base.BoardTestMixin):
         client.close()
 
     def create_board(self, persistence=None):
+        if persistence is None:
+            persistence = impl_memory.MemoryBackend()
         namespace = uuidutils.generate_uuid()
         client = ru.RedisClient()
         config = {
@@ -58,7 +60,7 @@ class RedisJobboardTest(test.TestCase, base.BoardTestMixin):
 
         with base.connect_close(self.board):
             with self.flush(self.client):
-                self.board.post('test', p_utils.temporary_log_book())
+                self.board.post('test', test_utils.test_factory)
 
             self.assertEqual(1, self.board.job_count)
             possible_jobs = list(self.board.iterjobs(only_unclaimed=True))
@@ -80,7 +82,7 @@ class RedisJobboardTest(test.TestCase, base.BoardTestMixin):
     def test_posting_claim_same_owner(self):
         with base.connect_close(self.board):
             with self.flush(self.client):
-                self.board.post('test', p_utils.temporary_log_book())
+                self.board.post('test', test_utils.test_factory)
 
             self.assertEqual(1, self.board.job_count)
             possible_jobs = list(self.board.iterjobs(only_unclaimed=True))

@@ -24,6 +24,7 @@ import stevedore.driver
 from zag import exceptions as exc
 from zag import logging
 from zag.persistence import backends as p_backends
+from zag.types import flow_factory as ff_type
 from zag.utils import misc
 from zag.utils import persistence_utils as p_utils
 
@@ -67,7 +68,7 @@ def _fetch_factory(factory_name):
                           % (factory_name, e))
 
 
-def _fetch_validate_factory(flow_factory):
+def fetch_validate_factory(flow_factory):
     if isinstance(flow_factory, six.string_types):
         factory_fun = _fetch_factory(flow_factory)
         factory_name = flow_factory
@@ -182,7 +183,7 @@ def save_factory_details(flow_detail,
         factory_args = []
     if not factory_kwargs:
         factory_kwargs = {}
-    factory_name, _factory_fun = _fetch_validate_factory(flow_factory)
+    factory_name, _factory_fun = fetch_validate_factory(flow_factory)
     factory_data = {
         'factory': {
             'name': factory_name,
@@ -221,7 +222,7 @@ def load_from_factory(flow_factory, factory_args=None, factory_kwargs=None,
     :returns: engine
     """
 
-    _factory_name, factory_fun = _fetch_validate_factory(flow_factory)
+    _factory_name, factory_fun = fetch_validate_factory(flow_factory)
     if not factory_args:
         factory_args = []
     if not factory_kwargs:
@@ -284,3 +285,48 @@ def load_from_detail(flow_detail, store=None, backend=None,
     return load(flow, flow_detail=flow_detail,
                 store=store, backend=backend,
                 namespace=namespace, engine=engine, **kwargs)
+
+
+def extract_flow_kwargs(flow_factory, factory_args=None, store=None):
+    """Extract required flow_factory arguments from a job store.
+
+    Given a flow_factory function or class, a list of positional arguments,
+    and a store dict, extract the remaining arguments for the flow_factory
+    from the store.
+
+    Throws KeyError if a required argument is not provided.
+    """
+    if factory_args is None:
+        factory_args = []
+
+    if store is None:
+        store = {}
+
+    kwargs = {}
+
+    _name, factory_fun = fetch_validate_factory(flow_factory)
+
+    if reflection.is_subclass(factory_fun, ff_type.FlowFactory):
+        factory_fun = factory_fun.generate
+
+    sig = reflection.get_signature(factory_fun)
+
+    for param_name, p in six.iteritems(sig.parameters):
+        if param_name == 'self':
+            continue
+
+        if p.kind is reflection.Parameter.VAR_POSITIONAL and factory_args:
+            factory_args.popleft()
+
+        value = store.get(param_name, p.default)
+        if value is reflection.Parameter.empty:
+            msg_tmpl = ('The flow {flow_factory} is missing a required '
+                        'parameter: {param_name}')
+            msg = msg_tmpl.format(flow_factory=flow_factory.__name__,
+                                  param_name=param_name)
+
+            raise KeyError(msg)
+
+        kwargs[param_name] = value
+
+    return kwargs

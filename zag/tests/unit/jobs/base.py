@@ -22,7 +22,6 @@ from zag import exceptions as excp
 from zag.persistence.backends import impl_dir
 from zag import states
 from zag.tests import utils as test_utils
-from zag.utils import persistence_utils as p_utils
 from zag.utils import threading_utils
 
 
@@ -58,8 +57,7 @@ class BoardTestMixin(object):
 
     def test_fresh_iter(self):
         with connect_close(self.board):
-            book = p_utils.temporary_log_book()
-            self.board.post('test', book)
+            self.board.post('test', test_utils.test_factory)
             jobs = list(self.board.iterjobs(ensure_fresh=True))
             self.assertEqual(1, len(jobs))
 
@@ -76,11 +74,11 @@ class BoardTestMixin(object):
                 raise RuntimeError("Waiter did not appear ready"
                                    " in %s seconds" % test_utils.WAIT_TIMEOUT)
             time.sleep(wait_post)
-            self.board.post('test', p_utils.temporary_log_book())
+            self.board.post('test', test_utils.test_factory)
 
         def waiter():
             ev.set()
-            it = self.board.wait()
+            it = self.board.wait(timeout=test_utils.WAIT_TIMEOUT)
             jobs.extend(it)
 
         with connect_close(self.board):
@@ -97,7 +95,7 @@ class BoardTestMixin(object):
 
         with connect_close(self.board):
             with self.flush(self.client):
-                self.board.post('test', p_utils.temporary_log_book())
+                self.board.post('test', test_utils.test_factory)
 
             self.assertEqual(1, self.board.job_count)
             possible_jobs = list(self.board.iterjobs(only_unclaimed=True))
@@ -121,7 +119,7 @@ class BoardTestMixin(object):
 
         with connect_close(self.board):
             with self.flush(self.client):
-                self.board.post('test', p_utils.temporary_log_book())
+                self.board.post('test', test_utils.test_factory)
 
             possible_jobs = list(self.board.iterjobs(only_unclaimed=True))
             self.assertEqual(1, len(possible_jobs))
@@ -142,7 +140,7 @@ class BoardTestMixin(object):
 
         with connect_close(self.board):
             with self.flush(self.client):
-                self.board.post('test', p_utils.temporary_log_book())
+                self.board.post('test', test_utils.test_factory)
 
             possible_jobs = list(self.board.iterjobs(only_unclaimed=True))
             self.assertEqual(1, len(possible_jobs))
@@ -162,7 +160,7 @@ class BoardTestMixin(object):
 
         with connect_close(self.board):
             with self.flush(self.client):
-                self.board.post('test', p_utils.temporary_log_book())
+                self.board.post('test', test_utils.test_factory)
 
             possible_jobs = list(self.board.iterjobs(only_unclaimed=True))
             self.assertEqual(1, len(possible_jobs))
@@ -178,7 +176,7 @@ class BoardTestMixin(object):
 
     def test_posting_consume_wait(self):
         with connect_close(self.board):
-            jb = self.board.post('test', p_utils.temporary_log_book())
+            jb = self.board.post('test', test_utils.test_factory)
             possible_jobs = list(self.board.iterjobs(only_unclaimed=True))
             self.board.claim(possible_jobs[0], self.board.name)
             self.board.consume(possible_jobs[0], self.board.name)
@@ -186,7 +184,7 @@ class BoardTestMixin(object):
 
     def test_posting_no_consume_wait(self):
         with connect_close(self.board):
-            jb = self.board.post('test', p_utils.temporary_log_book())
+            jb = self.board.post('test', test_utils.test_factory)
             self.assertFalse(jb.wait(0.1))
 
     def test_posting_with_book(self):
@@ -194,13 +192,13 @@ class BoardTestMixin(object):
             'path': self.makeTmpDir(),
         })
         backend.get_connection().upgrade()
-        book, flow_detail = p_utils.temporary_flow_detail(backend)
-        self.assertEqual(1, len(book))
 
         client, board = self.create_board(persistence=backend)
         with connect_close(board):
             with self.flush(client):
-                board.post('test', book)
+                job = board.post('test', test_utils.test_factory)
+            book = job.book
+            flow_detail = job.load_flow_detail()
 
             possible_jobs = list(board.iterjobs(only_unclaimed=True))
             self.assertEqual(1, len(possible_jobs))
@@ -219,7 +217,7 @@ class BoardTestMixin(object):
 
         with connect_close(self.board):
             with self.flush(self.client):
-                self.board.post('test', p_utils.temporary_log_book())
+                self.board.post('test', test_utils.test_factory)
 
             self.assertEqual(1, self.board.job_count)
             possible_jobs = list(self.board.iterjobs(only_unclaimed=True))

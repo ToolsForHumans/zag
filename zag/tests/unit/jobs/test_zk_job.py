@@ -16,6 +16,7 @@
 
 import contextlib
 import threading
+import time
 
 from kazoo.protocol import paths as k_paths
 from kazoo.recipe import watchers
@@ -28,6 +29,7 @@ from zake import utils as zake_utils
 
 from zag import exceptions as excp
 from zag.jobs.backends import impl_zookeeper
+from zag.persistence.backends import impl_memory
 from zag import states
 from zag import test
 from zag.test import mock
@@ -36,7 +38,6 @@ from zag.tests import utils as test_utils
 from zag.types import entity
 from zag.utils import kazoo_utils
 from zag.utils import misc
-from zag.utils import persistence_utils as p_utils
 
 FLUSH_PATH_TPL = '/zag/flush-test/%s'
 TEST_PATH_TPL = '/zag/board-test/%s'
@@ -94,7 +95,7 @@ class ZookeeperBoardTestMixin(base.BoardTestMixin):
             with mock.patch.object(self.client, 'create') as create_func:
                 create_func.side_effect = IOError("Unable to post")
                 self.assertRaises(IOError, self.board.post,
-                                  'test', p_utils.temporary_log_book())
+                                  'test', test_utils.test_factory)
             self.assertEqual(0, self.board.job_count)
 
     def test_board_iter(self):
@@ -111,7 +112,7 @@ class ZookeeperBoardTestMixin(base.BoardTestMixin):
         mock_dt.return_value = epoch
 
         with base.connect_close(self.board):
-            j = self.board.post('test', p_utils.temporary_log_book())
+            j = self.board.post('test', test_utils.test_factory)
             self.assertEqual(epoch, j.created_on)
             self.assertEqual(epoch, j.last_modified)
 
@@ -144,6 +145,8 @@ class ZookeeperJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
 
 class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
     def create_board(self, persistence=None):
+        if persistence is None:
+            persistence = impl_memory.MemoryBackend()
         client = fake_client.FakeClient()
         board = impl_zookeeper.ZookeeperJobBoard('test-board', {},
                                                  client=client,
@@ -162,7 +165,7 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
 
         with base.connect_close(self.board):
             with self.flush(self.client):
-                j = self.board.post('test', p_utils.temporary_log_book())
+                j = self.board.post('test', test_utils.test_factory)
             self.assertEqual(states.UNCLAIMED, j.state)
             with self.flush(self.client):
                 self.board.claim(j, self.board.name)
@@ -183,7 +186,7 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
 
         with base.connect_close(self.board):
             with self.flush(self.client):
-                j = self.board.post('test', p_utils.temporary_log_book())
+                j = self.board.post('test', test_utils.test_factory)
             self.assertEqual(states.UNCLAIMED, j.state)
             with self.flush(self.client):
                 self.board.claim(j, self.board.name)
@@ -204,7 +207,7 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
 
         with base.connect_close(self.board):
             with self.flush(self.client):
-                j = self.board.post('test', p_utils.temporary_log_book())
+                j = self.board.post('test', test_utils.test_factory)
             self.assertEqual(states.UNCLAIMED, j.state)
             with self.flush(self.client):
                 self.board.claim(j, self.board.name)
@@ -229,12 +232,12 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
             self.assertEqual(0, len(jobs))
 
     def test_posting_received_raw(self):
-        book = p_utils.temporary_log_book()
-
         with base.connect_close(self.board):
             self.assertTrue(self.board.connected)
             self.assertEqual(0, self.board.job_count)
-            posted_job = self.board.post('test', book)
+            posted_job = self.board.post('test', test_utils.test_factory)
+            book = posted_job.book
+            flow_detail = posted_job.load_flow_detail()
 
             self.assertEqual(self.board, posted_job.board)
             self.assertEqual(1, self.board.job_count)
@@ -261,7 +264,10 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
                 'uuid': book.uuid,
             },
             'priority': 'NORMAL',
-            'details': {},
+            'details': {
+                'store': {},
+                'flow_uuid': flow_detail.uuid,
+            },
         }, jsonutils.loads(misc.binary_decode(paths[path_key]['data'])))
 
     def test_register_entity(self):
@@ -294,3 +300,176 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
             self.assertRaises(excp.NotImplementedError,
                               self.board.register_entity,
                               entity_instance_2)
+
+    def test_scheduled_job(self):
+        with base.connect_close(self.board):
+            with self.flush(self.client):
+                j = self.board.post_scheduled('* * * * * * 2047', 'test',
+                                              test_utils.test_factory)
+            run_at = j.details.get('run_at')
+            self.assertGreaterEqual(int(time.time()), run_at)
+            self.assertEqual(states.UNCLAIMED, j.state)
+
+            with self.flush(self.client):
+                self.board.claim(j, self.board.name)
+            self.assertEqual(states.CLAIMED, j.state)
+
+            with self.flush(self.client):
+                self.board.consume(j, self.board.name)
+
+            jobs = []
+            paths = list(six.iteritems(self.client.storage.paths))
+            for (path, value) in paths:
+                if path in self.bad_paths:
+                    continue
+                elif (path.find(self.board._job_base) > -1
+                        and not path.endswith(LOCK_POSTFIX)):
+                    jobs.append(path)
+
+            # the job was re-posted after consumption
+            self.assertEqual(1, len(jobs))
+
+    def test_scheduled_job_with_past_schedule(self):
+        def _test():
+            with base.connect_close(self.board):
+                with self.flush(self.client):
+                    self.board.post_scheduled('* * * * * * 1900', 'test',
+                                              test_utils.test_factory)
+
+        self.assertRaises(excp.JobFailure, _test)
+
+    def test_scheduled_job_with_invalid_schedule(self):
+        def _test():
+            with base.connect_close(self.board):
+                with self.flush(self.client):
+                    self.board.post_scheduled('* q * * * * *', 'test',
+                                              test_utils.test_factory)
+
+        self.assertRaises(excp.JobFailure, _test)
+
+    def test_reset_job_schedule(self):
+        with base.connect_close(self.board):
+            with self.flush(self.client):
+                jobs = self.board.reset_schedule({
+                    'test': {
+                        'schedule': '* * * * *',
+                        'flow_factory': test_utils.test_factory,
+                    },
+                })
+                self.assertEqual(1, len(jobs))
+
+        jobs = []
+        paths = list(six.iteritems(self.client.storage.paths))
+        for (path, value) in paths:
+            if path in self.bad_paths:
+                continue
+            elif (path.find(self.board._job_base) > -1
+                  and not path.endswith(LOCK_POSTFIX)):
+                jobs.append(path)
+
+        self.assertEqual(1, len(jobs))
+
+    def test_reset_job_schedule_replaces_jobs(self):
+        with base.connect_close(self.board):
+            with self.flush(self.client):
+                def _reset():
+                    jobs = self.board.reset_schedule({
+                        'test': {
+                            'schedule': '* * * * *',
+                            'flow_factory': test_utils.test_factory,
+                        },
+                    })
+                    self.assertEqual(1, len(jobs))
+
+                _reset()
+                _reset()
+
+                jobs = []
+                paths = list(six.iteritems(self.client.storage.paths))
+                for (path, value) in paths:
+                    if path in self.bad_paths:
+                        continue
+                    elif (path.find(self.board._job_base) > -1
+                          and not path.endswith(LOCK_POSTFIX)):
+                        jobs.append(path)
+
+                self.assertEqual(1, len(jobs))
+
+    def test_reset_job_schedule_on_locked_job(self):
+        with base.connect_close(self.board):
+            with self.flush(self.client):
+                def _reset():
+                    jobs = self.board.reset_schedule({
+                        'test': {
+                            'schedule': '* * * * *',
+                            'flow_factory': test_utils.test_factory,
+                        },
+                    })
+                    self.assertEqual(1, len(jobs))
+                    return jobs
+
+                jobs = _reset()
+                self.board.claim(jobs[0], 'test')
+                self.assertRaises(excp.UnclaimableJob, _reset)
+
+    def test_search_jobs(self):
+        with base.connect_close(self.board):
+            store_part1 = {'a': 'b'}
+            store_part2 = {'b': 'c'}
+            store = store_part1.copy()
+            store.update(store_part2)
+            with self.flush(self.client):
+                j = self.board.post('test', test_utils.test_factory,
+                                    store=store)
+                self.board.post('test', test_utils.test_factory,
+                                store=store_part1)
+                self.board.post('test', test_utils.test_factory,
+                                store=store_part2)
+
+            full_matches = list(self.board.search(store_filter=store))
+            self.assertEqual(1, len(full_matches))
+            self.assertEqual(j.uuid, full_matches[0].uuid)
+
+            for p_store in (store_part1, store_part2):
+                p_matches = list(self.board.search(store_filter=p_store))
+                self.assertEqual(2, len(p_matches))
+
+            excluded_matches = list(self.board.search(store_filter=store,
+                                                      exclude=[j.book_uuid]))
+            self.assertEqual(0, len(excluded_matches))
+
+            unclaimed_matches = list(self.board.search(store_filter=store,
+                                                       only_unclaimed=True))
+            self.assertEqual(1, len(unclaimed_matches))
+
+            self.board.claim(j, 'me')
+
+            unclaimed_matches = list(self.board.search(store_filter=store,
+                                                       only_unclaimed=True))
+            self.assertEqual(0, len(unclaimed_matches))
+
+    def test_killall_jobs(self):
+        with base.connect_close(self.board):
+            with self.flush(self.client):
+                j = self.board.post('test', test_utils.test_factory)
+                self.board.post('test', test_utils.test_factory)
+                self.board.post('test', test_utils.test_factory)
+
+            self.board.claim(j, 'me')
+
+            # since all the filtering is done via search and we test that,
+            # we don't need to test it again here
+            killed_jobs = list(self.board.killall())
+            self.assertEqual(3, len(killed_jobs))
+
+            jobs = []
+            paths = list(six.iteritems(self.client.storage.paths))
+            for (path, value) in paths:
+                if path in self.bad_paths:
+                    continue
+                elif (path.find(self.board._job_base) > -1
+                        and not path.endswith(LOCK_POSTFIX)):
+                    jobs.append(path)
+
+            # the job was re-posted after consumption
+            self.assertEqual(0, len(jobs))

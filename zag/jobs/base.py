@@ -20,15 +20,28 @@ import collections
 import contextlib
 import time
 
+import crontab
 import enum
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import six
 
+from zag import engines
+from zag.engines import helpers as engine_helpers
 from zag import exceptions as excp
+from zag.persistence import models
 from zag import states
 from zag.types import notifier
 from zag.utils import iter_utils
+
+JOB_SCHEDULE_NAME_PREFIX = 'crontab-'
+
+
+def _next_scheduled_delay(schedule):
+    delay = crontab.CronTab(schedule).next(default_utc=True)
+    if delay:
+        return int(delay)
+    return None
 
 
 class JobPriority(enum.Enum):
@@ -199,7 +212,6 @@ class Job(object):
             if w is not None:
                 sleepy_secs = min(w.leftover(), sleepy_secs)
             sleep_func(sleepy_secs)
-        return False
 
     @property
     def book(self):
@@ -248,6 +260,41 @@ class Job(object):
         """The non-uniquely identifying name of this job."""
         return self._name
 
+    def load_flow_detail(self):
+        """Extracts a flow detail from a job (via some manner).
+
+        The current mechanism to accomplish this is the following choices:
+
+        * If the job details provide a 'flow_uuid' key attempt to load this
+          key from the jobs book and use that as the flow_detail to run.
+        * If the job details does not have have a 'flow_uuid' key then attempt
+          to examine the size of the book and if it's only one element in the
+          book (aka one flow_detail) then just use that.
+        * Otherwise if there is no 'flow_uuid' defined or there are > 1
+          flow_details in the book raise an error that corresponds to being
+          unable to locate the correct flow_detail to run.
+        """
+        book = self.book
+        if book is None:
+            raise excp.NotFound("No book found in job")
+        if self.details and 'flow_uuid' in self.details:
+            flow_uuid = self.details["flow_uuid"]
+            flow_detail = book.find(flow_uuid)
+            if flow_detail is None:
+                raise excp.NotFound("No matching flow detail found in"
+                                    " jobs book for flow detail"
+                                    " with uuid %s" % flow_uuid)
+        else:
+            choices = len(book)
+            if choices == 1:
+                flow_detail = list(book)[0]
+            elif choices == 0:
+                raise excp.NotFound("No flow detail(s) found in jobs book")
+            else:
+                raise excp.MultipleChoices("No matching flow detail found (%s"
+                                           " choices) in jobs book" % choices)
+        return flow_detail
+
     def _load_book(self):
         book_uuid = self.book_uuid
         if self._backend is not None and book_uuid is not None:
@@ -268,6 +315,30 @@ class Job(object):
             cls_name, self.name, self.priority,
             self.uuid, self.details)
 
+    def maybe_reschedule(self):
+        """Reschedule a job if there are more iterations on its schedule.
+
+        If this job has a schedule and that schedule has not been exhausted,
+        go ahead and put it back on the board to be re-run at the proper
+        next iteration time.
+        """
+        schedule = self.details.get('schedule')
+        if schedule:
+            delay = _next_scheduled_delay(schedule)
+            if delay is not None:
+                # this is a scheduled job, so re-post it for the next iteration
+                # if one exists
+                flow_details = self.load_flow_detail()
+                factory_details = flow_details.meta.get('factory', {})
+                return self.board.post_scheduled(
+                    schedule,
+                    self.name,
+                    factory_details['name'],
+                    factory_args=factory_details.get('args'),
+                    factory_kwargs=factory_details.get('kwargs'),
+                    priority=self.priority,
+                )
+
 
 class JobBoardIterator(six.Iterator):
     """Iterator over a jobboard that iterates over potential jobs.
@@ -287,7 +358,8 @@ class JobBoardIterator(six.Iterator):
 
     def __init__(self, board, logger,
                  board_fetch_func=None, board_removal_func=None,
-                 only_unclaimed=False, ensure_fresh=False):
+                 only_unclaimed=False, ensure_fresh=False,
+                 include_delayed=False):
         self._board = board
         self._logger = logger
         self._board_removal_func = board_removal_func
@@ -296,6 +368,7 @@ class JobBoardIterator(six.Iterator):
         self._jobs = collections.deque()
         self.only_unclaimed = only_unclaimed
         self.ensure_fresh = ensure_fresh
+        self.include_delayed = include_delayed
 
     @property
     def board(self):
@@ -315,7 +388,15 @@ class JobBoardIterator(six.Iterator):
             maybe_job = self._jobs.popleft()
             try:
                 if maybe_job.state in allowed_states:
-                    job = maybe_job
+                    if not self.include_delayed:
+                        run_at = maybe_job.details.get('run_at', None)
+                        if not run_at or run_at <= time.time():
+                            job = maybe_job
+                        else:
+                            self._logger.debug("Ignoring delayed job '%s'",
+                                               maybe_job)
+                    else:
+                        job = maybe_job
             except excp.JobFailure:
                 self._logger.warn("Failed determining the state of"
                                   " job '%s'", maybe_job, exc_info=True)
@@ -355,12 +436,19 @@ class JobBoard(object):
     people can interview and apply for (and then work on & complete).
     """
 
-    def __init__(self, name, conf):
+    def __init__(self, name, conf, persistence):
         self._name = name
         self._conf = conf
+        # The backend to load the full logbooks from, since what is sent over
+        # the data connection is only the logbook uuid and name, and not the
+        # full logbook.
+        self._persistence = persistence
+
+        self.notifier = notifier.Notifier()
 
     @abc.abstractmethod
-    def iterjobs(self, only_unclaimed=False, ensure_fresh=False):
+    def iterjobs(self, only_unclaimed=False, ensure_fresh=False,
+                 include_delayed=False):
         """Returns an iterator of jobs that are currently on this board.
 
         NOTE(harlowja): the ordering of this iteration should be by posting
@@ -438,8 +526,62 @@ class JobBoard(object):
             this must be the same name that was used for claiming this job.
         """
 
+    def create_logbook(self, job_name, store=None):
+        logbook_id = uuidutils.generate_uuid()
+        connection = self._persistence.get_connection()
+
+        try:
+            book = connection.get_logbook(logbook_id, lazy=True)
+        except excp.NotFound:
+            book = models.LogBook(job_name, logbook_id)
+
+        flow_detail = models.FlowDetail(job_name, logbook_id)
+        flow_detail.meta['store'] = store or {}
+
+        book.add(flow_detail)
+        connection.save_logbook(book)
+        return flow_detail, book
+
+    def _prep_job_posting(self, name, details, flow_factory, factory_args=None,
+                          factory_kwargs=None, store=None,
+                          priority=JobPriority.NORMAL):
+        if store is None:
+            store = {}
+
+        if factory_kwargs is None:
+            factory_kwargs = engine_helpers.extract_flow_kwargs(flow_factory,
+                                                                factory_args,
+                                                                store)
+
+        flow_detail, book = self.create_logbook(name)
+
+        details.update({
+            'flow_uuid': flow_detail.uuid,
+            'store': store,
+        })
+
+        engines.save_factory_details(flow_detail, flow_factory,
+                                     factory_args=factory_args,
+                                     factory_kwargs=factory_kwargs,
+                                     backend=self._persistence)
+
+        job_priority = JobPriority.convert(priority)
+        job_uuid = uuidutils.generate_uuid()
+        job_posting = format_posting(job_uuid, name,
+                                     book=book, details=details,
+                                     priority=job_priority)
+        return (name, job_uuid, job_posting, book, details, job_priority)
+
     @abc.abstractmethod
-    def post(self, name, book=None, details=None, priority=JobPriority.NORMAL):
+    def _do_job_posting(self, name, job_uuid, job_posting, book, details,
+                        job_priority):
+        """The guts of a post to be defined by each jobboard.
+
+        :returns: Job
+        """
+
+    def post(self, name, flow_factory, factory_args=None, factory_kwargs=None,
+             store=None, priority=JobPriority.NORMAL):
         """Atomically creates and posts a job to the jobboard.
 
         This posting allowing others to attempt to claim that job (and
@@ -454,6 +596,115 @@ class JobBoard(object):
 
         Returns a job object representing the information that was posted.
         """
+        post_data = self._prep_job_posting(
+            name,
+            {},
+            flow_factory,
+            factory_args=factory_args,
+            factory_kwargs=factory_kwargs,
+            store=store,
+            priority=priority,
+        )
+        return self._do_job_posting(*post_data)
+
+    def post_scheduled(self, schedule, name, flow_factory, factory_args=None,
+                       factory_kwargs=None, store=None,
+                       priority=JobPriority.NORMAL):
+        """Post a scheduled job.
+
+        This takes a crontab-like schedule and will run the job on that
+        schedule. Each time a job is finished, it will be re-posted at the next
+        start time for that schedule.
+        """
+        try:
+            delay = _next_scheduled_delay(schedule)
+        except ValueError:
+            raise excp.JobFailure("Schedule '%s' for scheduled job is not "
+                                  "valid", schedule)
+        else:
+            if delay is None:
+                raise excp.JobFailure("Schedule '%s' for scheduled job does "
+                                      "not include any future times", schedule)
+
+        post_data = self._prep_job_posting(
+            name,
+            {'schedule': schedule, 'run_at': int(time.time() + delay)},
+            flow_factory,
+            factory_args=factory_args,
+            factory_kwargs=factory_kwargs,
+            store=store,
+            priority=priority,
+        )
+        return self._do_job_posting(*post_data)
+
+    def post_delayed(self, delay, name, flow_factory, factory_args=None,
+                     factory_kwargs=None, store=None,
+                     priority=JobPriority.NORMAL):
+        """Post a delayed job.
+
+        Post a job for later consumption. Jobs will not be claimed until the
+        delay has passed from the posting time. This lets you give jobs a
+        slight delay in order to finalize db state in the process submitting
+        the job before the job will be started. It's also used by scheduled
+        jobs to schedule the next iteration of a job.
+        """
+        post_data = self._prep_job_posting(
+            name,
+            {'run_at': int(time.time() + delay)},
+            flow_factory,
+            factory_args=factory_args,
+            factory_kwargs=factory_kwargs,
+            store=store,
+            priority=priority,
+        )
+        return self._do_job_posting(*post_data)
+
+    def reset_schedule(self, schedule):
+        """Replace a set of scheduled jobs.
+
+        The schedule should look something like:
+
+        {
+          'job1': {
+            'schedule': '* * * * *',
+            'flow_factory': my_project.flows.factory_fun,
+            'factory_args': ['arg1'],
+            'factory_kwargs': {'kwarg1': 'value1'},
+            'store': {'param1':'value1'},
+            'priority': JobPriority.NORMAL,
+          },
+        }
+
+        *NOTE*: this method should be run when the conductor is shut down so
+        that none of the existing scheduled jobs that are being updated are
+        owned by a conductor. Otherwise it will fail because it can't remove
+        a job that's locked.
+
+        :param schedule: dict containing all the necessary details
+        :type schedule: dict
+        :returns: list(Job)
+        """
+        for job in self.iterjobs(ensure_fresh=True, include_delayed=True):
+            job_name = job.name.replace(JOB_SCHEDULE_NAME_PREFIX, '')
+            if job_name in schedule:
+                owner = self.name + '_schedule_reset'
+                self.claim(job, owner)
+                self.trash(job, owner)
+
+        jobs = []
+        for job_name, job_info in six.iteritems(schedule):
+            job = self.post_scheduled(
+                job_info['schedule'],
+                JOB_SCHEDULE_NAME_PREFIX + job_name,
+                job_info['flow_factory'],
+                factory_args=job_info.get('factory_args', []),
+                factory_kwargs=job_info.get('factory_kwargs', {}),
+                store=job_info.get('store', {}),
+                priority=job_info.get('priority', JobPriority.NORMAL)
+            )
+            jobs.append(job)
+
+        return jobs
 
     @abc.abstractmethod
     def claim(self, job, who):
@@ -534,25 +785,85 @@ class JobBoard(object):
         occurs).
         """
 
+    def search(self, flow_factory=None, store_filter=None, exclude=None,
+               only_unclaimed=False):
+        """Find pending or running jobs matching certain filters.
+
+        :param flow_factory: a function used to generate a flow
+        :type flow_factory: function
+        :param store_filter: key/value pairs to match against job stores
+        :type store_filter: dict
+        :param exclude: list of logbook uuids to ignore
+        :type exclude: list
+        :param only_unclaimed: limit it to unclaimed jobs
+        :type only_unclaimed: bool
+        :return: iterator of zag.jobs.Job objects
+        """
+
+        for job in self.iterjobs(ensure_fresh=True,
+                                 only_unclaimed=only_unclaimed):
+            if exclude and job.book_uuid in exclude:
+                continue
+
+            if flow_factory:
+                name, _ = engine_helpers.fetch_validate_factory(flow_factory)
+                flow_detail = job.load_flow_detail()
+                if flow_detail.meta['factory']['name'] != name:
+                    continue
+
+            if store_filter:
+                store = job.details.get('store', {})
+                try:
+                    for fkey, fval in store_filter.items():
+                        if fkey not in store or store[fkey] != fval:
+                            raise StopIteration()
+                except StopIteration:
+                    continue
+
+            yield job
+
+    def killall(self, flow_factory=None, store_filter=None, exclude=None,
+                only_unclaimed=False):
+        """Kill pending or running jobs matching certain filters.
+
+        This will not cancel the currently running task, but will abort
+        continuing the flow after the current task finishes. This
+        cancellation does not run any task reverts in the current flow, it
+        simply abandons the job where it's at and stops processing new tasks.
+
+        If you need to do something with the jobs that were cancelled, you
+        can iterate over the results of this method.
+
+        :param flow_factory: a function used to generate a flow
+        :type flow_factory: function
+        :param store_filter: key/value pairs to match against job stores
+        :type store_filter: dict
+        :param exclude: list of logbook uuids to ignore
+        :type exclude: list
+        :param only_unclaimed: limit it to unclaimed jobs
+        :type only_unclaimed: bool
+        :return: iterator of zag.jobs.Job objects
+        """
+        for job in self.search(flow_factory=flow_factory,
+                               store_filter=store_filter,
+                               exclude=exclude,
+                               only_unclaimed=only_unclaimed):
+            try:
+                owner = self.find_owner(job)
+                if owner is None:
+                    # job isn't owned, we need to claim it before we kill it
+                    owner = 'job_killer'
+                    self.claim(job, owner)
+
+                self.trash(job, owner)
+                yield job
+            except excp.NotFound:
+                pass
+
 
 # Jobboard events
 POSTED = 'POSTED'  # new job is/has been posted
 REMOVAL = 'REMOVAL'  # existing job is/has been removed
-
-
-class NotifyingJobBoard(JobBoard):
-    """A jobboard subclass that can notify others about board events.
-
-    Implementers are expected to notify *at least* about jobs being posted
-    and removed.
-
-    NOTE(harlowja): notifications that are emitted *may* be emitted on a
-    separate dedicated thread when they occur, so ensure that all callbacks
-    registered are thread safe (and block for as little time as possible).
-    """
-    def __init__(self, name, conf):
-        super(NotifyingJobBoard, self).__init__(name, conf)
-        self.notifier = notifier.Notifier()
 
 
 # Internal helpers for usage by board implementations...
