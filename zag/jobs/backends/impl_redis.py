@@ -27,7 +27,6 @@ from oslo_serialization import msgpackutils
 from oslo_utils import excutils
 from oslo_utils import strutils
 from oslo_utils import timeutils
-from oslo_utils import uuidutils
 from redis import exceptions as redis_exceptions
 import six
 from six.moves import range as compat_range
@@ -569,9 +568,8 @@ return cmsgpack.pack(result)
                     client_conf[key] = conf[key]
         return ru.RedisClient(**client_conf)
 
-    def __init__(self, name, conf,
-                 client=None, persistence=None):
-        super(RedisJobBoard, self).__init__(name, conf)
+    def __init__(self, name, conf, persistence, client=None):
+        super(RedisJobBoard, self).__init__(name, conf, persistence)
         self._closed = True
         if client is not None:
             self._client = client
@@ -586,10 +584,6 @@ return cmsgpack.pack(result)
         # Redis server version connected to + scripts (populated on connect).
         self._redis_version = None
         self._scripts = {}
-        # The backend to load the full logbooks from, since what is sent over
-        # the data connection is only the logbook uuid and name, and not the
-        # full logbook.
-        self._persistence = persistence
 
     def join(self, key_piece, *more_key_pieces):
         """Create and return a namespaced key from many segments.
@@ -733,21 +727,15 @@ return cmsgpack.pack(result)
             raw_owner = self._client.get(owner_key)
             return self._decode_owner(raw_owner)
 
-    def post(self, name, book=None, details=None,
-             priority=base.JobPriority.NORMAL):
-        job_uuid = uuidutils.generate_uuid()
-        job_priority = base.JobPriority.convert(priority)
-        posting = base.format_posting(job_uuid, name,
-                                      created_on=timeutils.utcnow(),
-                                      book=book, details=details,
-                                      priority=job_priority)
+    def _do_job_posting(self, name, job_uuid, job_posting, book, details,
+                        job_priority):
         with _translate_failures():
             sequence = self._client.incr(self.sequence_key)
-            posting.update({
+            job_posting.update({
                 'sequence': sequence,
             })
         with _translate_failures():
-            raw_posting = self._dumps(posting)
+            raw_posting = self._dumps(job_posting)
             raw_job_uuid = six.b(job_uuid)
             was_posted = bool(self._client.hsetnx(self.listings_key,
                                                   raw_job_uuid, raw_posting))
@@ -758,8 +746,8 @@ return cmsgpack.pack(result)
             else:
                 return RedisJob(self, name, sequence, raw_job_uuid,
                                 uuid=job_uuid, details=details,
-                                created_on=posting['created_on'],
-                                book=book, book_data=posting.get('book'),
+                                created_on=job_posting['created_on'],
+                                book=book, book_data=job_posting.get('book'),
                                 backend=self._persistence,
                                 priority=job_priority)
 
@@ -828,11 +816,16 @@ return cmsgpack.pack(result)
                                          priority=job_priority))
         return sorted(postings, reverse=True)
 
-    def iterjobs(self, only_unclaimed=False, ensure_fresh=False):
+    def iterjobs(self, only_unclaimed=False, ensure_fresh=False,
+                 include_delayed=False):
         return base.JobBoardIterator(
-            self, LOG, only_unclaimed=only_unclaimed,
+            self,
+            LOG,
+            only_unclaimed=only_unclaimed,
             ensure_fresh=ensure_fresh,
-            board_fetch_func=lambda ensure_fresh: self._fetch_jobs())
+            include_delayed=include_delayed,
+            board_fetch_func=lambda ensure_fresh: self._fetch_jobs()
+        )
 
     def register_entity(self, entity):
         # Will implement a redis jobboard conductor register later
@@ -848,7 +841,9 @@ return cmsgpack.pack(result)
                                 args=[raw_who, job.key])
             result = self._loads(raw_result)
         status = result['status']
-        if status != self.SCRIPT_STATUS_OK:
+        if status == self.SCRIPT_STATUS_OK:
+            job.maybe_reschedule()
+        else:
             reason = result.get('reason')
             if reason == self.SCRIPT_UNKNOWN_JOB:
                 raise exc.NotFound("Job %s not found to be"

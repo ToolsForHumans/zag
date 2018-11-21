@@ -56,3 +56,6 @@ pydot>=1.2.4 # MIT License
 
 # For improved/better wbe worker finding
 tooz>=1.19.0 # Apache-2.0
+
+# For scheduled jobs
+crontab>=0.22.3

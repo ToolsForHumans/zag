@@ -20,7 +20,6 @@ import fasteners
 import six
 
 from zag import engines
-from zag import exceptions as excp
 from zag.types import entity
 from zag.types import notifier
 from zag.utils import misc
@@ -83,44 +82,9 @@ class Conductor(object):
         """
         return self._notifier
 
-    def _flow_detail_from_job(self, job):
-        """Extracts a flow detail from a job (via some manner).
-
-        The current mechanism to accomplish this is the following choices:
-
-        * If the job details provide a 'flow_uuid' key attempt to load this
-          key from the jobs book and use that as the flow_detail to run.
-        * If the job details does not have have a 'flow_uuid' key then attempt
-          to examine the size of the book and if it's only one element in the
-          book (aka one flow_detail) then just use that.
-        * Otherwise if there is no 'flow_uuid' defined or there are > 1
-          flow_details in the book raise an error that corresponds to being
-          unable to locate the correct flow_detail to run.
-        """
-        book = job.book
-        if book is None:
-            raise excp.NotFound("No book found in job")
-        if job.details and 'flow_uuid' in job.details:
-            flow_uuid = job.details["flow_uuid"]
-            flow_detail = book.find(flow_uuid)
-            if flow_detail is None:
-                raise excp.NotFound("No matching flow detail found in"
-                                    " jobs book for flow detail"
-                                    " with uuid %s" % flow_uuid)
-        else:
-            choices = len(book)
-            if choices == 1:
-                flow_detail = list(book)[0]
-            elif choices == 0:
-                raise excp.NotFound("No flow detail(s) found in jobs book")
-            else:
-                raise excp.MultipleChoices("No matching flow detail found (%s"
-                                           " choices) in jobs book" % choices)
-        return flow_detail
-
     def _engine_from_job(self, job):
         """Extracts an engine from a job (via some manner)."""
-        flow_detail = self._flow_detail_from_job(job)
+        flow_detail = job.load_flow_detail()
         store = {}
 
         if flow_detail.meta and 'store' in flow_detail.meta:

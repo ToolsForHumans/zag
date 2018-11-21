@@ -86,11 +86,12 @@ class TestClaimListener(test.TestCase, EngineMakerMixin):
         super(TestClaimListener, self).setUp()
         self.client = fake_client.FakeClient()
         self.addCleanup(self.client.stop)
-        self.board = jobs.fetch('test', 'zookeeper', client=self.client)
+        self.board = jobs.fetch('test', 'zookeeper', client=self.client,
+                                persistence=impl_memory.MemoryBackend())
         self.addCleanup(self.board.close)
         self.board.connect()
 
-    def _post_claim_job(self, job_name, book=None, details=None):
+    def _post_claim_job(self, job_name):
         arrived = threading.Event()
 
         def set_on_children(children):
@@ -98,7 +99,7 @@ class TestClaimListener(test.TestCase, EngineMakerMixin):
                 arrived.set()
 
         self.client.ChildrenWatch("/zag", set_on_children)
-        job = self.board.post('test-1')
+        job = self.board.post(job_name, test_utils.test_factory)
 
         # Make sure it arrived and claimed before doing further work...
         self.assertTrue(arrived.wait(test_utils.WAIT_TIMEOUT))

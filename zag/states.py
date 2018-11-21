@@ -20,6 +20,7 @@ from zag import exceptions as exc
 CLAIMED = 'CLAIMED'
 COMPLETE = 'COMPLETE'
 UNCLAIMED = 'UNCLAIMED'
+DELAYED = 'DELAYED'
 
 # Flow states.
 FAILURE = 'FAILURE'

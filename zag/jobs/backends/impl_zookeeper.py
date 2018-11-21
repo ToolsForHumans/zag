@@ -29,7 +29,6 @@ from kazoo.recipe import watchers
 from oslo_serialization import jsonutils
 from oslo_utils import excutils
 from oslo_utils import timeutils
-from oslo_utils import uuidutils
 import six
 
 from zag.conductors import base as c_base
@@ -208,7 +207,7 @@ class ZookeeperJob(base.Job):
         return hash(self.path)
 
 
-class ZookeeperJobBoard(base.NotifyingJobBoard):
+class ZookeeperJobBoard(base.JobBoard):
     """A jobboard backed by `zookeeper`_.
 
     Powered by the `kazoo <https://kazoo.readthedocs.io/en/latest/>`_ library.
@@ -279,9 +278,9 @@ class ZookeeperJobBoard(base.NotifyingJobBoard):
     or may be recovered (aka, it has not full disconnected).
     """
 
-    def __init__(self, name, conf,
-                 client=None, persistence=None, emit_notifications=True):
-        super(ZookeeperJobBoard, self).__init__(name, conf)
+    def __init__(self, name, conf, persistence,
+                 client=None, emit_notifications=True):
+        super(ZookeeperJobBoard, self).__init__(name, conf, persistence)
         if client is not None:
             self._client = client
             self._owned = False
@@ -299,10 +298,6 @@ class ZookeeperJobBoard(base.NotifyingJobBoard):
         self._entity_path = self._path.replace(
             k_paths.basename(self._path),
             self.ENTITY_FOLDER)
-        # The backend to load the full logbooks from, since what is sent over
-        # the data connection is only the logbook uuid and name, and not the
-        # full logbook.
-        self._persistence = persistence
         # Misc. internal details
         self._known_jobs = {}
         self._job_cond = threading.Condition()
@@ -391,12 +386,18 @@ class ZookeeperJobBoard(base.NotifyingJobBoard):
             excp.raise_with_cause(excp.JobFailure,
                                   "Refreshing failure, internal error")
 
-    def iterjobs(self, only_unclaimed=False, ensure_fresh=False):
+    def iterjobs(self, only_unclaimed=False, ensure_fresh=False,
+                 include_delayed=False):
         board_removal_func = lambda job: self._remove_job(job.path)
         return base.JobBoardIterator(
-            self, LOG, only_unclaimed=only_unclaimed,
-            ensure_fresh=ensure_fresh, board_fetch_func=self._fetch_jobs,
-            board_removal_func=board_removal_func)
+            self,
+            LOG,
+            only_unclaimed=only_unclaimed,
+            ensure_fresh=ensure_fresh,
+            include_delayed=include_delayed,
+            board_fetch_func=self._fetch_jobs,
+            board_removal_func=board_removal_func,
+        )
 
     def _remove_job(self, path):
         if path not in self._known_jobs:
@@ -514,16 +515,8 @@ class ZookeeperJobBoard(base.NotifyingJobBoard):
             else:
                 self._process_child(path, request, quiet=False)
 
-    def post(self, name, book=None, details=None,
-             priority=base.JobPriority.NORMAL):
-        # NOTE(harlowja): Jobs are not ephemeral, they will persist until they
-        # are consumed (this may change later, but seems safer to do this until
-        # further notice).
-        job_priority = base.JobPriority.convert(priority)
-        job_uuid = uuidutils.generate_uuid()
-        job_posting = base.format_posting(job_uuid, name,
-                                          book=book, details=details,
-                                          priority=job_priority)
+    def _do_job_posting(self, name, job_uuid, job_posting, book, details,
+                        job_priority):
         raw_job_posting = misc.binary_encode(jsonutils.dumps(job_posting))
         with self._wrap(job_uuid, None,
                         fail_msg_tpl="Posting failure: %s",
@@ -692,6 +685,7 @@ class ZookeeperJobBoard(base.NotifyingJobBoard):
             txn.delete(job.path, version=data_stat.version)
             kazoo_utils.checked_commit(txn)
             self._remove_job(job.path)
+            job.maybe_reschedule()
 
     @base.check_who
     def abandon(self, job, who):

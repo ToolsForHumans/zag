@@ -25,6 +25,7 @@ import six
 
 from zag import exceptions
 from zag.listeners import capturing
+from zag.patterns import linear_flow as lf
 from zag.persistence.backends import impl_memory
 from zag import retry
 from zag import task
@@ -41,7 +42,7 @@ ZK_TEST_CONFIG = {
 }
 # If latches/events take longer than this to become empty/set, something is
 # usually wrong and should be debugged instead of deadlocking...
-WAIT_TIMEOUT = 300
+WAIT_TIMEOUT = 30
 
 
 @contextlib.contextmanager
@@ -446,3 +447,9 @@ def make_many(amount, task_cls=DummyTask, offset=0):
         offset += 1
         amount -= 1
     return tasks
+
+
+def test_factory():
+    f = lf.Flow("test")
+    f.add(ProgressingTask('test1'))
+    return f
