@@ -28,7 +28,6 @@ import types
 
 import enum
 import networkx as nx
-from oslo_serialization import jsonutils
 from oslo_serialization import msgpackutils
 from oslo_utils import encodeutils
 from oslo_utils import importutils
@@ -36,6 +35,7 @@ from oslo_utils import netutils
 from oslo_utils import reflection
 import six
 
+from zag import json as zag_json
 from zag.types import failure
 
 
@@ -395,7 +395,7 @@ def decode_json(raw_data, root_types=(dict,)):
     types (by default a dict should be the root type).
     """
     try:
-        data = jsonutils.loads(binary_decode(raw_data))
+        data = zag_json.loads(binary_decode(raw_data))
     except UnicodeDecodeError as e:
         raise ValueError("Expected UTF-8 decodable data: %s" % e)
     except ValueError as e:

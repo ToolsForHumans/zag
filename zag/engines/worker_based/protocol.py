@@ -22,13 +22,13 @@ from automaton import exceptions as machine_excp
 from automaton import machines
 import fasteners
 import futurist
-from oslo_serialization import jsonutils
 from oslo_utils import reflection
 from oslo_utils import timeutils
 import six
 
 from zag.engines.action_engine import executor
 from zag import exceptions as excp
+from zag import json as zag_json
 from zag import logging
 from zag.types import failure as ft
 from zag.utils import misc
@@ -164,7 +164,7 @@ class Capabilities(object):
 
     @staticmethod
     def dumps(topic, tasks):
-        return misc.binary_encode(jsonutils.dumps({
+        return misc.binary_encode(zag_json.dumps({
             'topic': topic,
             'tasks': tasks,
         }))

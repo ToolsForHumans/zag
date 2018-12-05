@@ -20,7 +20,6 @@ import time
 
 from kazoo.protocol import paths as k_paths
 from kazoo.recipe import watchers
-from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 import six
 import testtools
@@ -29,6 +28,7 @@ from zake import utils as zake_utils
 
 from zag import exceptions as excp
 from zag.jobs.backends import impl_zookeeper
+from zag import json as zag_json
 from zag.persistence.backends import impl_memory
 from zag import states
 from zag import test
@@ -179,7 +179,7 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
                 if path in self.bad_paths:
                     continue
                 if path.endswith('lock'):
-                    value['data'] = misc.binary_encode(jsonutils.dumps({}))
+                    value['data'] = misc.binary_encode(zag_json.dumps({}))
             self.assertEqual(states.UNCLAIMED, j.state)
 
     def test_posting_state_lock_lost(self):
@@ -268,7 +268,7 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
                 'store': {},
                 'flow_uuid': flow_detail.uuid,
             },
-        }, jsonutils.loads(misc.binary_decode(paths[path_key]['data'])))
+        }, zag_json.loads(misc.binary_decode(paths[path_key]['data'])))
 
     def test_register_entity(self):
         conductor_name = "conductor-abc@localhost:4123"
@@ -291,7 +291,7 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
             'name': conductor_name,
             'kind': 'conductor',
             'metadata': {},
-        }, jsonutils.loads(misc.binary_decode(conductor_data)))
+        }, zag_json.loads(misc.binary_decode(conductor_data)))
 
         entity_instance_2 = entity.Entity("non-sense",
                                           "other_name",

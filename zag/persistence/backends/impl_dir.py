@@ -23,10 +23,10 @@ import shutil
 
 import cachetools
 import fasteners
-from oslo_serialization import jsonutils
 from oslo_utils import fileutils
 
 from zag import exceptions as exc
+from zag import json as zag_json
 from zag.persistence import path_based
 from zag.utils import misc
 
@@ -130,7 +130,7 @@ class Connection(path_based.PathBasedConnection):
     def _set_item(self, path, value, transaction):
         with self._path_lock(path):
             item_path = self._join_path(path, 'metadata')
-            self._write_to(item_path, jsonutils.dumps(value))
+            self._write_to(item_path, zag_json.dumps(value))
 
     def _del_tree(self, path, transaction):
         with self._path_lock(path):

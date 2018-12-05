@@ -26,7 +26,6 @@ from kazoo import exceptions as k_exceptions
 from kazoo.protocol import paths as k_paths
 from kazoo.protocol import states as k_states
 from kazoo.recipe import watchers
-from oslo_serialization import jsonutils
 from oslo_utils import excutils
 from oslo_utils import timeutils
 import six
@@ -34,6 +33,7 @@ import six
 from zag.conductors import base as c_base
 from zag import exceptions as excp
 from zag.jobs import base
+from zag import json as zag_json
 from zag import logging
 from zag import states
 from zag.utils import kazoo_utils
@@ -517,7 +517,7 @@ class ZookeeperJobBoard(base.JobBoard):
 
     def _do_job_posting(self, name, job_uuid, job_posting, book, details,
                         job_priority):
-        raw_job_posting = misc.binary_encode(jsonutils.dumps(job_posting))
+        raw_job_posting = misc.binary_encode(zag_json.dumps(job_posting))
         with self._wrap(job_uuid, None,
                         fail_msg_tpl="Posting failure: %s",
                         ensure_known=False):
@@ -554,7 +554,7 @@ class ZookeeperJobBoard(base.JobBoard):
                         fail_msg_tpl="Claiming failure: %s"):
             # NOTE(harlowja): post as json which will allow for future changes
             # more easily than a raw string/text.
-            value = jsonutils.dumps({
+            value = zag_json.dumps({
                 'owner': who,
             })
             # Ensure the target job is still existent (at the right version).
@@ -641,7 +641,7 @@ class ZookeeperJobBoard(base.JobBoard):
                 self._client.ensure_path(entity_path)
                 self._client.create(k_paths.join(entity_path, entity.name),
                                     value=misc.binary_encode(
-                                        jsonutils.dumps(entity.to_dict())),
+                                        zag_json.dumps(entity.to_dict())),
                                     ephemeral=True)
             except k_exceptions.NodeExistsError:
                 pass
@@ -724,7 +724,7 @@ class ZookeeperJobBoard(base.JobBoard):
                                       " which is not owned by %s"
                                       % (job.uuid, who))
             trash_path = job.path.replace(self.path, self.trash_path)
-            value = misc.binary_encode(jsonutils.dumps(data))
+            value = misc.binary_encode(zag_json.dumps(data))
             txn = self._client.transaction()
             txn.create(trash_path, value=value)
             txn.delete(job.lock_path, version=lock_stat.version)
