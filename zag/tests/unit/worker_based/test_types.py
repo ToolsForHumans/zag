@@ -16,11 +16,11 @@
 
 import functools
 
-from oslo_serialization import jsonutils
 from oslo_utils import reflection
 from tooz import coordination
 
 from zag.engines.worker_based import types as worker_types
+from zag import json as zag_json
 from zag import test
 from zag.test import mock
 from zag.tests import utils
@@ -126,7 +126,7 @@ class TestToozFinder(test.TestCase):
             'topic': '1-202-555-0198',
             'tasks': ['y', 'z'],
         }
-        worker_result = ToozFakeResult(jsonutils.dumps(worker_capabilities))
+        worker_result = ToozFakeResult(zag_json.dumps(worker_capabilities))
         self.coordinator.get_member_capabilities.return_value = worker_result
         finder.start()
         self.assertEqual(1, finder.available_workers)
@@ -168,7 +168,7 @@ class TestToozFinder(test.TestCase):
             'topic': '1-202-555-0133',
             'tasks': ['y', 'z'],
         }
-        worker_result = ToozFakeResult(jsonutils.dumps(worker_capabilities))
+        worker_result = ToozFakeResult(zag_json.dumps(worker_capabilities))
         self.coordinator.get_member_capabilities.return_value = worker_result
         finder.notice()
         self.assertTrue(self.coordinator.get_member_capabilities.called)
@@ -196,7 +196,7 @@ class TestToozFinder(test.TestCase):
         }
 
         def get_worker_capabilities(group_id, member_id):
-            return ToozFakeResult(jsonutils.dumps(workers[member_id]))
+            return ToozFakeResult(zag_json.dumps(workers[member_id]))
 
         get_member_capabilities = self.coordinator.get_member_capabilities
         get_member_capabilities.side_effect = get_worker_capabilities
@@ -225,7 +225,7 @@ class TestToozFinder(test.TestCase):
         }
 
         def get_worker_capabilities(group_id, member_id):
-            return ToozFakeResult(jsonutils.dumps(workers[member_id]))
+            return ToozFakeResult(zag_json.dumps(workers[member_id]))
 
         finder = worker_types.ToozWorkerFinder("blah://", 'me', ['a'])
         self.coordinator.get_groups.return_value = ToozFakeResult(['a'])

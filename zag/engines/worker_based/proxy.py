@@ -20,10 +20,10 @@ import threading
 import kombu
 from kombu import exceptions as kombu_exceptions
 from kombu import serialization as kombu_serialization
-from oslo_serialization import jsonutils
 import six
 
 from zag.engines.worker_based import dispatcher
+from zag import json as zag_json
 from zag import logging
 
 LOG = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ _TransportDetails = collections.namedtuple('_TransportDetails',
 
 SERIALIZER = 'json'
 
-kombu_serialization.register(SERIALIZER, jsonutils.dumps, jsonutils.loads,
+kombu_serialization.register(SERIALIZER, zag_json.dumps, zag_json.loads,
                              content_type='application/json',
                              content_encoding='utf-8')
 

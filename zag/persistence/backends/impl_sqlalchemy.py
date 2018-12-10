@@ -32,6 +32,7 @@ from sqlalchemy import sql
 import tenacity
 
 from zag import exceptions as exc
+from zag import json as zag_json
 from zag import logging
 from zag.persistence.backends.sqlalchemy import migration
 from zag.persistence.backends.sqlalchemy import tables
@@ -281,18 +282,22 @@ class SQLAlchemyBackend(base.Backend):
                                     ('pool_timeout', 'pool_timeout')]:
                 if lookup_key in conf:
                     engine_args[k] = misc.as_int(conf.pop(lookup_key))
+
+            if e_url.drivername in ('mysql', 'postgresql'):
+                # only mysql and postgres drivers allow you to override this
+                # hopefully sqla will add support to other drivers
+                engine_args['json_serializer'] = zag_json.dumps
+                engine_args['json_deserializer'] = zag_json.loads
+
         if 'isolation_level' not in conf:
             # Check driver name exact matches first, then try driver name
             # partial matches...
             txn_isolation_levels = conf.pop('isolation_levels',
                                             DEFAULT_TXN_ISOLATION_LEVELS)
-            level_applied = False
-            for (driver, level) in six.iteritems(txn_isolation_levels):
-                if driver == e_url.drivername:
-                    engine_args['isolation_level'] = level
-                    level_applied = True
-                    break
-            if not level_applied:
+            level = txn_isolation_levels.get(e_url.drivername)
+            if level is not None:
+                engine_args['isolation_level'] = level
+            else:
                 for (driver, level) in six.iteritems(txn_isolation_levels):
                     if e_url.drivername.find(driver) != -1:
                         engine_args['isolation_level'] = level

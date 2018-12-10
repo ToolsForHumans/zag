@@ -19,9 +19,9 @@ import contextlib
 
 from kazoo import exceptions as k_exc
 from kazoo.protocol import paths
-from oslo_serialization import jsonutils
 
 from zag import exceptions as exc
+from zag import json as zag_json
 from zag.persistence import path_based
 from zag.utils import kazoo_utils as k_utils
 from zag.utils import misc
@@ -128,7 +128,7 @@ class ZkConnection(path_based.PathBasedConnection):
         return misc.decode_json(data)
 
     def _set_item(self, path, value, transaction):
-        data = misc.binary_encode(jsonutils.dumps(value))
+        data = misc.binary_encode(zag_json.dumps(value))
         if not self._client.exists(path):
             transaction.create(path, data)
         else:

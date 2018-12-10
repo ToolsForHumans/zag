@@ -20,12 +20,12 @@ import os
 import sys
 import traceback
 
-from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 from oslo_utils import reflection
 import six
 
 from zag import exceptions as exc
+from zag import json as zag_json
 from zag.utils import iter_utils
 from zag.utils import mixins
 from zag.utils import schema_utils as su
@@ -514,7 +514,7 @@ class Failure(mixins.StrMixin):
         complex properties that aren't safely converted to JSON.
         """
         try:
-            primitive = jsonutils.to_primitive(data)
+            primitive = zag_json.default(data)
         except ValueError:
             # last-ditch effort, try to force it to a string
             try:

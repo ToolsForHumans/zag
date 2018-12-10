@@ -19,7 +19,6 @@ import logging
 import threading
 import time
 
-from oslo_serialization import jsonutils
 from oslo_utils import reflection
 import six
 from zake import fake_client
@@ -27,6 +26,7 @@ from zake import fake_client
 import zag.engines
 from zag import exceptions as exc
 from zag.jobs import backends as jobs
+from zag import json as zag_json
 from zag.listeners import claims
 from zag.listeners import logging as logging_listeners
 from zag.listeners import timing
@@ -127,7 +127,7 @@ class TestClaimListener(test.TestCase, EngineMakerMixin):
         for p, data in six.iteritems(children):
             if p.endswith(".lock"):
                 self.client.set(p, misc.binary_encode(
-                    jsonutils.dumps({'owner': new_owner})))
+                    zag_json.dumps({'owner': new_owner})))
                 altered += 1
         return altered
 
