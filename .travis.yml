@@ -1,0 +1,31 @@
+sudo: false
+language: python
+cache:
+  directories:
+  - "$HOME/.cache/pip"
+matrix:
+  include:
+  - python: 3.7
+    env: TOXENV=pep8
+  - python: 2.7
+    env: TOXENV=py27
+  - python: 3.7
+    env: TOXENV=py37
+  - python: pypy
+    env: TOXENV=pypy
+  - python: 3.7
+    script: skip  # Skipping as tests are executed prior to hitting this stage
+    if: tag =~ ^v
+    deploy:
+      provider: pypi
+      user: jimbobhickville
+      password:
+        secure: "<to be filled>"
+      distributions: "sdist bdist_wheel"
+      on:
+        tags: true
+
+install:
+- pip install tox
+script:
+- tox -e $TOXENV
