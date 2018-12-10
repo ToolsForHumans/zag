@@ -29,6 +29,7 @@ import six
 from zag import engines
 from zag.engines import helpers as engine_helpers
 from zag import exceptions as excp
+from zag import json as zag_json
 from zag.persistence import models
 from zag import states
 from zag.types import notifier
@@ -815,7 +816,8 @@ class JobBoard(object):
                 store = job.details.get('store', {})
                 try:
                     for fkey, fval in store_filter.items():
-                        if fkey not in store or store[fkey] != fval:
+                        if (fkey not in store or
+                                store[fkey] != zag_json.default(fval)):
                             raise StopIteration()
                 except StopIteration:
                     continue
