@@ -7,13 +7,17 @@ matrix:
   include:
   - python: 3.7
     env: TOXENV=pep8
+    dist: xenial
+    sudo: true
   - python: 2.7
     env: TOXENV=py27
   - python: 3.7
     env: TOXENV=py37
-  - python: pypy
-    env: TOXENV=pypy
+    dist: xenial
+    sudo: true
   - python: 3.7
+    dist: xenial
+    sudo: true
     script: skip  # Skipping as tests are executed prior to hitting this stage
     if: tag =~ ^v
     deploy:
