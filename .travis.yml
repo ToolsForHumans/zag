@@ -20,7 +20,7 @@ matrix:
       provider: pypi
       user: jimbobhickville
       password:
-        secure: "<to be filled>"
+        secure: "rCarE0Ay1ol5tz9cHPso2gvuq64NDgl2i0W5YUzyfT2YVCfBdocSuZ4hiqPdGEwFr4RF29PRTgoIr9MfvUZwOKuYPwDgBD+4YBcVOBqnBSlOLY6DObQZJYivYjemSRdNEiVLKP3UrXebPRXgMeSQUY8fof5es2Im5KFH9W/gvNGOTlGuk7d1pBGB+JdipIFgFA5xkNNYVTbSWLGpO/pKZUUb8eGQ0mZD6ldBfotml/KjAa2BbvPfyuNl4O2LD5Z8vHAqNVpiR+x/n/dbqRKq5F8/nPVmdAlrAuBD/yVcloI/zxztD+teZYLZJP6KBGgANDWv46dKuszJTLtQFnYyGmb/n4Rmsx2/Du+0VFDAR/yz4rOwiNQ6h7HtbDTBAAkiAUxY4ByrTkv8KXePFHIYvK549jEmVN/CsP9SYnBQGB0NmGj9Qu72Mk4j6fmzazpbLMnet3nC8BzNWl84B6mcOjcqwFRO5Kg3sJDnZ9BkFyBlN09ULenFduYmXNzg2ULde4VKQl6mayDKxynCF9JcHXWghyEfAM1/Ga+3m0JwiatKgVvvNH7VnV7JqfHfyaQGQ8pXpkKIP5Kqd0eGA93b6YQT/P/E549vKn9BTAbkHgsDr5UQYi0AkEiztR4ikUJ6w3YuwoXeSTQR/ua842yMP59qC93Tl8WqFEamjqWNGGM="
       distributions: "sdist bdist_wheel"
       on:
         tags: true
