@@ -71,6 +71,10 @@ class ClassBasedFactory(ff_types.FlowFactory):
         return f
 
 
+def compiler_failure_factory():
+    raise Exception("I can't compile this flow!")
+
+
 def single_factory():
     return futurist.ThreadPoolExecutor(max_workers=1)
 
@@ -82,16 +86,25 @@ ComponentBundle = collections.namedtuple('ComponentBundle',
 
 class ManyConductorTest(testscenarios.TestWithScenarios,
                         test_utils.EngineTestBase, test.TestCase):
+    conductor_kwargs = {
+        'wait_timeout': 0.01,
+        'job_compiler_error_limit': 1,
+    }
+
     scenarios = [
-        ('blocking', {'kind': 'blocking',
-                      'conductor_kwargs': {'wait_timeout': 0.1}}),
-        ('nonblocking_many_thread',
-         {'kind': 'nonblocking', 'conductor_kwargs': {'wait_timeout': 0.1}}),
-        ('nonblocking_one_thread', {'kind': 'nonblocking',
-                                    'conductor_kwargs': {
-                                        'executor_factory': single_factory,
-                                        'wait_timeout': 0.1,
-                                    }})
+        ('blocking', {
+            'kind': 'blocking',
+            'conductor_kwargs': conductor_kwargs,
+        }),
+        ('nonblocking_many_thread', {
+            'kind': 'nonblocking',
+            'conductor_kwargs': conductor_kwargs,
+        }),
+        ('nonblocking_one_thread', {
+            'kind': 'nonblocking',
+            'conductor_kwargs': dict(executor_factory=single_factory,
+                                     **conductor_kwargs),
+        }),
     ]
 
     def make_components(self):
@@ -398,6 +411,36 @@ class ManyConductorTest(testscenarios.TestWithScenarios,
             self.assertFalse(job_consumed_event.is_set())
             self.assertFalse(consumed_event.is_set())
 
+    def test_job_compilation_errors(self):
+        components = self.make_components()
+        components.conductor.connect()
+        job_trashed_event = threading.Event()
+        job_abandoned_event = threading.Event()
+
+        def on_job_trashed(event, details):
+            if event == 'job_trashed':
+                job_trashed_event.set()
+
+        def on_job_abandoned(event, details):
+            if event == 'job_abandoned':
+                job_abandoned_event.set()
+
+        components.conductor.notifier.register("job_trashed",
+                                               on_job_trashed)
+        components.conductor.notifier.register("job_abandoned",
+                                               on_job_abandoned)
+        with close_many(components.conductor, components.client):
+            t = threading_utils.daemon_thread(components.conductor.run)
+            t.start()
+            components.board.post('poke', compiler_failure_factory)
+            job_abandoned_event.wait(test_utils.WAIT_TIMEOUT)
+            self.assertTrue(job_abandoned_event.is_set())
+
+            job_trashed_event.wait(test_utils.WAIT_TIMEOUT)
+            self.assertTrue(job_trashed_event.is_set())
+
+            components.conductor.stop()
+
 
 class ListenerFactoryTest(test.TestCase):
     def make_components(self, listener_factories):
@@ -407,7 +450,7 @@ class ListenerFactoryTest(test.TestCase):
                                                  client=client,
                                                  persistence=persistence)
         conductor_kwargs = {
-            'wait_timeout': 0.1,
+            'wait_timeout': 0.01,
             'listener_factories': listener_factories,
             'persistence': persistence,
         }

@@ -30,14 +30,22 @@ class BlockingConductor(impl_executor.ExecutorConductor):
         return futurist.SynchronousExecutor()
 
     def __init__(self, name, jobboard,
-                 persistence=None, engine=None,
-                 engine_options=None, wait_timeout=None,
-                 log=None, max_simultaneous_jobs=MAX_SIMULTANEOUS_JOBS,
-                 listener_factories=None):
+                 persistence=None,
+                 engine=None,
+                 engine_options=None,
+                 wait_timeout=None,
+                 log=None,
+                 max_simultaneous_jobs=MAX_SIMULTANEOUS_JOBS,
+                 listener_factories=None,
+                 job_compiler_error_limit=None):
         super(BlockingConductor, self).__init__(
             name, jobboard,
-            persistence=persistence, engine=engine,
+            persistence=persistence,
+            engine=engine,
             engine_options=engine_options,
-            wait_timeout=wait_timeout, log=log,
+            wait_timeout=wait_timeout,
+            log=log,
             max_simultaneous_jobs=max_simultaneous_jobs,
-            listener_factories=listener_factories)
+            listener_factories=listener_factories,
+            job_compiler_error_limit=job_compiler_error_limit,
+        )
