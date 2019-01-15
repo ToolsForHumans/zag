@@ -13,6 +13,7 @@
 #    under the License.
 
 import abc
+import collections
 import functools
 import itertools
 import threading
@@ -73,6 +74,11 @@ class ExecutorConductor(base.Conductor):
 
     #: Default timeout used to idle/wait when no jobs have been found.
     WAIT_TIMEOUT = 0.5
+    """
+    Default time to wait idle before looking for more jobs on the board when
+    no jobs have been processed. If jobs have been processed, there is no
+    delay to look for more jobs.
+    """
 
     MAX_SIMULTANEOUS_JOBS = -1
     """
@@ -85,6 +91,17 @@ class ExecutorConductor(base.Conductor):
     https://bugs.python.org/issue22737 is ever implemented and released.
     """
 
+    JOB_COMPILER_ERROR_LIMIT = 10
+    """
+    Default number of attempts to try executing the job.
+
+    If the job fails to compile with any exception, we will put it back on the
+    board and retry it again later. This controls how many times we attempt
+    to compile the job before finally giving up and destroying it. This does
+    not have anything to do with tasks failing. Retrying tasks is something
+    that belongs to the flow definition.
+    """
+
     #: Exceptions that will **not** cause consumption to occur.
     NO_CONSUME_EXCEPTIONS = tuple([
         excp.ExecutionFailure,
@@ -95,26 +112,39 @@ class ExecutorConductor(base.Conductor):
     """This attribute *can* be overridden by subclasses (for example if
        an eventlet *green* event works better for the conductor user)."""
 
-    EVENTS_EMITTED = tuple([
-        'compilation_start', 'compilation_end',
-        'preparation_start', 'preparation_end',
-        'validation_start', 'validation_end',
-        'running_start', 'running_end',
-        'job_consumed', 'job_abandoned',
-    ])
+    EVENTS_EMITTED = (
+        'compilation_start',
+        'compilation_end',
+        'preparation_start',
+        'preparation_end',
+        'validation_start',
+        'validation_end',
+        'running_start',
+        'running_end',
+        'job_consumed',
+        'job_abandoned',
+        'job_trashed',
+    )
     """Events will be emitted for each of the events above.  The event is
        emitted to listeners registered with the conductor.
     """
 
     def __init__(self, name, jobboard,
-                 persistence=None, engine=None,
-                 engine_options=None, wait_timeout=None,
-                 log=None, max_simultaneous_jobs=MAX_SIMULTANEOUS_JOBS,
-                 listener_factories=None):
+                 persistence=None,
+                 engine=None,
+                 engine_options=None,
+                 wait_timeout=None,
+                 log=None,
+                 max_simultaneous_jobs=MAX_SIMULTANEOUS_JOBS,
+                 listener_factories=None,
+                 job_compiler_error_limit=None):
         super(ExecutorConductor, self).__init__(
-            name, jobboard, persistence=persistence,
-            engine=engine, engine_options=engine_options,
-            listener_factories=listener_factories)
+            name, jobboard,
+            persistence=persistence,
+            engine=engine,
+            engine_options=engine_options,
+            listener_factories=listener_factories,
+        )
         self._wait_timeout = tt.convert_to_timeout(
             value=wait_timeout, default_value=self.WAIT_TIMEOUT,
             event_factory=self._event_factory)
@@ -124,6 +154,10 @@ class ExecutorConductor(base.Conductor):
             misc.pick_first_not_none(max_simultaneous_jobs,
                                      self.MAX_SIMULTANEOUS_JOBS))
         self._dispatched = set()
+        self._job_compiler_error_limit = misc.pick_first_not_none(
+            job_compiler_error_limit, self.JOB_COMPILER_ERROR_LIMIT
+        )
+        self._job_compiler_errors = collections.defaultdict(int)
 
     def _executor_factory(self):
         """Creates an executor to be used during dispatching."""
@@ -156,6 +190,7 @@ class ExecutorConductor(base.Conductor):
     def _dispatch_job(self, job):
         engine = self._engine_from_job(job)
         listeners = self._listeners_from_job(job, engine)
+
         with ExitStack() as stack:
             for listener in listeners:
                 stack.enter_context(listener)
@@ -226,13 +261,24 @@ class ExecutorConductor(base.Conductor):
                     'conductor': self,
                     'persistence': self._persistence,
                 })
+                del self._job_compiler_errors[job.uuid]
             else:
-                self._jobboard.abandon(job, self._name)
-                self._notifier.notify("job_abandoned", {
-                    'job': job,
-                    'conductor': self,
-                    'persistence': self._persistence,
-                })
+                max_failures = self._job_compiler_error_limit
+                if self._job_compiler_errors[job.uuid] < max_failures:
+                    self._job_compiler_errors[job.uuid] += 1
+                    self._jobboard.abandon(job, self._name)
+                    self._notifier.notify("job_abandoned", {
+                        'job': job,
+                        'conductor': self,
+                        'persistence': self._persistence,
+                    })
+                else:
+                    self._jobboard.trash(job, self._name)
+                    self._notifier.notify("job_trashed", {
+                        'job': job,
+                        'conductor': self,
+                        'persistence': self._persistence,
+                    })
         except (excp.JobFailure, excp.NotFound):
             if consume:
                 self._log.warn("Failed job consumption: %s", job,

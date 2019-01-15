@@ -51,17 +51,26 @@ class NonBlockingConductor(impl_executor.ExecutorConductor):
         return futurist.ThreadPoolExecutor(max_workers=max_workers)
 
     def __init__(self, name, jobboard,
-                 persistence=None, engine=None,
-                 engine_options=None, wait_timeout=None,
-                 log=None, max_simultaneous_jobs=MAX_SIMULTANEOUS_JOBS,
+                 persistence=None,
+                 engine=None,
+                 engine_options=None,
+                 wait_timeout=None,
+                 log=None,
+                 max_simultaneous_jobs=MAX_SIMULTANEOUS_JOBS,
                  executor_factory=None,
-                 listener_factories=None):
+                 listener_factories=None,
+                 job_compiler_error_limit=None):
         super(NonBlockingConductor, self).__init__(
             name, jobboard,
-            persistence=persistence, engine=engine,
-            engine_options=engine_options, wait_timeout=wait_timeout,
-            log=log, max_simultaneous_jobs=max_simultaneous_jobs,
-            listener_factories=listener_factories)
+            persistence=persistence,
+            engine=engine,
+            engine_options=engine_options,
+            wait_timeout=wait_timeout,
+            log=log,
+            max_simultaneous_jobs=max_simultaneous_jobs,
+            listener_factories=listener_factories,
+            job_compiler_error_limit=job_compiler_error_limit,
+        )
         if executor_factory is None:
             self._executor_factory = self._default_executor_factory
         else:
