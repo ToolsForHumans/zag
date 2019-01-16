@@ -261,7 +261,8 @@ class ExecutorConductor(base.Conductor):
                     'conductor': self,
                     'persistence': self._persistence,
                 })
-                del self._job_compiler_errors[job.uuid]
+                if job.uuid in self._job_compiler_errors:
+                    del self._job_compiler_errors[job.uuid]
             else:
                 max_failures = self._job_compiler_error_limit
                 if self._job_compiler_errors[job.uuid] < max_failures:
