@@ -515,11 +515,11 @@ class Failure(mixins.StrMixin):
         """
         try:
             primitive = zag_json.default(data)
-        except ValueError:
+        except (TypeError, ValueError, OverflowError):
             # last-ditch effort, try to force it to a string
             try:
                 primitive = six.text_type(data)
-            except TypeError:
+            except Exception:
                 primitive = data
 
         if not isinstance(primitive, six.string_types + (list, dict)):
