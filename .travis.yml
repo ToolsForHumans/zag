@@ -24,7 +24,7 @@ matrix:
       provider: pypi
       user: jimbobhickville
       password:
-        secure: "d0jPJhssJtUf0G1u6/r1zGY/1L2slyvPPLYH29/Bn2yhnqgu/TV6NdixBZjWTkGDylvdutMLjhzAX+XtpHYqOY6GWsR4o2CbsB06kzTBk2yvAQt6vel4dyV60txTl2cYOE+yIyPkmt6TPlWsGSAv9e++NqHF9LpvNv9tAxhFucP35dAnVofW+WncXLRr8pufdXdx2oOsTmyB4Z+yxlk83tfYXungW7Ys3whrpTMVRLPmAJIk7jWlDIvIwiMzw/KTmqQr/x/PN26DRW1j3Hzj/zMURJ+5TzwCRUYit8ayvdnXUSKtOYahWpXG+zFvaw3kGBP0Qh/AIe6r2UmmZk4isEH+AYYEF1XtS67QPLYVGBnQgFE/reHefbLOx9VOcjEixbcCYVJFYWNdt7RZoLxJ/fi7pJie+gP1aARqQcfXxZTvLY5rb1eSb+Gkpy9iNqI4uULXWTLL0GefSrzoGZNAGkUn7sDvvTQ8TTxQbeIJTKcJV8dq7aZx/+XBern5t7a234lv0Sqrc3fU9MYtjTL3pplfF4j5M1P+IVfOaT+jeQGnIOq+J/fbQKwGzaNZficBf77NJYDgtNVrOc+wm66PV+j7m4gAACx4f4aD4E+8KpKDRdM6k66SNAknK0qZ6c1fksBF8a95BeAPer6O4e5TlRXcHpEFphZWUnPviehVJp0="
+        secure: "F4DpoTcqXkKvQZ3zNJS/3p8107s/TkdVd0+Pd2xw2jFiZNNyWq7tJftQMRJdD2toDLYiqnTUpIsYwLblvrnVmhHQtF9EitImjbPP+D0q1bqzfue2hHnmU2BxFkne+pP9yY3/ORAy6nuPbo4POlTt0/aOx6WifFy2kqlD45OOfcN4+8gLjuZlWdZfugCLXdx3oZOQqhFqWfwqxbcdXkZchrvMVUrH6wyCSXtyPu6HUU6r5aJSO4sCfPLoMhRwRvQNqqhq7vuCJHMWwkjMx5YCzD7+7H+1MFo6/L3p8PbUmAtnPD5+PD3lLqANqSHBqE69gCZF7WiJO1C7Qs7NuoqE9MU+xT3qfsdfkq/7zW0ckNkcx499jBeBHk/OnvwQwvIPXLrH9bJgtFAZDyqEb3p+8zY13i9x7EfDQEl67baT1l7FxaupDp1mGaBeswXSe68eGL2nReRndEnY4KcHrPN8kDzql2JnNf2OF0fYZTqUxrPYEGA+2hgDZYDgYY7GA2t0X5Nwp43ZyyHiD9fB5a/n60FhBlWb82//X0DuOg9LBzKtjg8kSI+iYImXqlBaLWRTd5YWAqvmL1jC3JpvQyLa2qlaxFT/bJBhHQoEoFSs0awGRQ6QkfLGRCZrrIl9qNTDElMJa9maldrC/1Z+sh9ftSE57IST9EuzST/JDa1Ima8="
       distributions: "sdist bdist_wheel"
       on:
         tags: true
