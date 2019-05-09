@@ -22,3 +22,4 @@ def upgrade():
 def downgrade():
     op.drop_index(op.f('ix_atomdetails_parent_uuid'), table_name='atomdetails')
     op.drop_index(op.f('ix_flowdetails_parent_uuid'), table_name='flowdetails')
+
