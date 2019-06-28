@@ -261,9 +261,13 @@ class SQLAlchemyBackend(base.Backend):
         conf = copy.deepcopy(conf)
         engine_args = {
             'echo': _as_bool(conf.pop('echo', False)),
-            'convert_unicode': _as_bool(conf.pop('convert_unicode', True)),
             'pool_recycle': 3600,
         }
+
+        if 'convert_unicode' in conf:
+            convert_unicode = _as_bool(conf.pop('convert_unicode', True))
+            engine_args['convert_unicode'] = convert_unicode
+
         if 'idle_timeout' in conf:
             idle_timeout = misc.as_int(conf.pop('idle_timeout'))
             engine_args['pool_recycle'] = idle_timeout
