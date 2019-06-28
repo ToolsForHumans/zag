@@ -41,17 +41,17 @@ def _get_indexes():
     # up and fetched, so attempt to ensure that that is done quickly.
     indexes = [
         {
-            'name': 'logbook_uuid_idx',
+            'index_name': 'logbook_uuid_idx',
             'table_name': 'logbooks',
             'columns': ['uuid'],
         },
         {
-            'name': 'flowdetails_uuid_idx',
+            'index_name': 'flowdetails_uuid_idx',
             'table_name': 'flowdetails',
             'columns': ['uuid'],
         },
         {
-            'name': 'taskdetails_uuid_idx',
+            'index_name': 'taskdetails_uuid_idx',
             'table_name': 'taskdetails',
             'columns': ['uuid'],
         },
@@ -63,7 +63,7 @@ def _get_foreign_keys():
     f_keys = [
         # Flow details uuid -> logbook parent uuid
         {
-            'name': 'flowdetails_ibfk_1',
+            'constraint_name': 'flowdetails_ibfk_1',
             'source': 'flowdetails',
             'referent': 'logbooks',
             'local_cols': ['parent_uuid'],
@@ -72,7 +72,7 @@ def _get_foreign_keys():
         },
         # Task details uuid -> flow details parent uuid
         {
-            'name': 'taskdetails_ibfk_1',
+            'constraint_name': 'taskdetails_ibfk_1',
             'source': 'taskdetails',
             'referent': 'flowdetails',
             'local_cols': ['parent_uuid'],
