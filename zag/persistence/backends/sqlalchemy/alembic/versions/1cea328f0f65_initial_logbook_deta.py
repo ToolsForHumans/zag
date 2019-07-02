@@ -22,16 +22,16 @@ Create Date: 2013-08-23 11:41:49.207087
 
 """
 
-# revision identifiers, used by Alembic.
-revision = '1cea328f0f65'
-down_revision = None
-
 import logging
 
 from alembic import op
 import sqlalchemy as sa
 
 from zag.persistence.backends.sqlalchemy import tables
+
+# revision identifiers, used by Alembic.
+revision = '1cea328f0f65'
+down_revision = None
 
 LOG = logging.getLogger(__name__)
 

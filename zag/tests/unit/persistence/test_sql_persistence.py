@@ -23,6 +23,13 @@ import tempfile
 import six
 import testtools
 
+import sqlalchemy as sa
+
+from zag.persistence import backends
+from zag.persistence.backends import impl_sqlalchemy
+from zag import test
+from zag.tests.unit.persistence import base
+
 
 # NOTE(harlowja): by default this will test against sqlite using a temporary
 # sqlite file (this is done instead of in-memory to ensure thread safety,
@@ -39,13 +46,6 @@ USER = "zag_citest"
 PASSWD = "zag_citest"
 DATABASE = "tftest_" + ''.join(random.choice('0123456789')
                                for _ in range(12))
-
-import sqlalchemy as sa
-
-from zag.persistence import backends
-from zag.persistence.backends import impl_sqlalchemy
-from zag import test
-from zag.tests.unit.persistence import base
 
 
 def _get_connect_string(backend, user, passwd, database=None, variant=None):

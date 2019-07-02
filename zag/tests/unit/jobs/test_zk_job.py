@@ -224,8 +224,8 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
                     continue
                 if path.find(TRASH_FOLDER) > -1:
                     trashed.append(path)
-                elif (path.find(self.board._job_base) > -1
-                        and not path.endswith(LOCK_POSTFIX)):
+                elif (path.find(self.board._job_base) > -1 and
+                      not path.endswith(LOCK_POSTFIX)):
                     jobs.append(path)
 
             self.assertEqual(1, len(trashed))
@@ -322,8 +322,8 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
             for (path, value) in paths:
                 if path in self.bad_paths:
                     continue
-                elif (path.find(self.board._job_base) > -1
-                        and not path.endswith(LOCK_POSTFIX)):
+                elif (path.find(self.board._job_base) > -1 and
+                      not path.endswith(LOCK_POSTFIX)):
                     jobs.append(path)
 
             # the job was re-posted after consumption
@@ -363,8 +363,8 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
         for (path, value) in paths:
             if path in self.bad_paths:
                 continue
-            elif (path.find(self.board._job_base) > -1
-                  and not path.endswith(LOCK_POSTFIX)):
+            elif (path.find(self.board._job_base) > -1 and
+                  not path.endswith(LOCK_POSTFIX)):
                 jobs.append(path)
 
         self.assertEqual(1, len(jobs))
@@ -389,8 +389,8 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
                 for (path, value) in paths:
                     if path in self.bad_paths:
                         continue
-                    elif (path.find(self.board._job_base) > -1
-                          and not path.endswith(LOCK_POSTFIX)):
+                    elif (path.find(self.board._job_base) > -1 and
+                          not path.endswith(LOCK_POSTFIX)):
                         jobs.append(path)
 
                 self.assertEqual(1, len(jobs))
@@ -467,8 +467,8 @@ class ZakeJobboardTest(test.TestCase, ZookeeperBoardTestMixin):
             for (path, value) in paths:
                 if path in self.bad_paths:
                     continue
-                elif (path.find(self.board._job_base) > -1
-                        and not path.endswith(LOCK_POSTFIX)):
+                elif (path.find(self.board._job_base) > -1 and
+                      not path.endswith(LOCK_POSTFIX)):
                     jobs.append(path)
 
             # the job was re-posted after consumption

@@ -81,8 +81,8 @@ class Failure(mixins.StrMixin):
     exception and desire to reraise it to the user/caller of the WBE based
     engine for appropriate handling (this matches the behavior of non-remote
     engines). To accomplish this a failure object (or a
-    :py:meth:`~.Failure.to_dict` form) would be sent over the WBE channel
-    and the WBE based engine would deserialize it and use this objects
+    :py:meth:`~.Failure.to_dict` form) would be sent over the WBE channel and
+     the WBE based engine would deserialize it and use this objects
     :meth:`.reraise` method to cause an exception that contains
     similar/equivalent information as the original exception to be reraised,
     allowing the user (or the WBE engine itself) to then handle the worker
@@ -97,8 +97,8 @@ class Failure(mixins.StrMixin):
 
     * Traceback objects are not serializable/recreatable, since they contain
       references to stack frames at the location where the exception was
-      raised. When a failure object is serialized and sent across a channel
-      and recreated it is *not* possible to restore the original traceback and
+      raised. When a failure object is serialized and sent across a channel and
+       recreated it is *not* possible to restore the original traceback and
       originating stack frames.
     * The original exception *type* can not be guaranteed to be found, workers
       can run code that is not accessible/available when the failure is being
@@ -252,11 +252,11 @@ class Failure(mixins.StrMixin):
     def _matches(self, other):
         if self is other:
             return True
-        return (self._exc_type_names == other._exc_type_names
-                and self.exception_args == other.exception_args
-                and self.exception_str == other.exception_str
-                and self.traceback_str == other.traceback_str
-                and self.causes == other.causes)
+        return (self._exc_type_names == other._exc_type_names and
+                self.exception_args == other.exception_args and
+                self.exception_str == other.exception_str and
+                self.traceback_str == other.traceback_str and
+                self.causes == other.causes)
 
     def matches(self, other):
         """Checks if another object is equivalent to this object.

@@ -14,14 +14,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# revision identifiers, used by Alembic.
-revision = '14b227d79a87'
-down_revision = '84d6e888850'
-
 from alembic import op
 import sqlalchemy as sa
 
 from zag import states
+
+# revision identifiers, used by Alembic.
+revision = '14b227d79a87'
+down_revision = '84d6e888850'
 
 
 def upgrade():

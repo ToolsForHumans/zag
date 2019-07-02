@@ -173,10 +173,10 @@ class DynamicLoggingListener(base.Listener):
                 # will show or hide results that the task may have produced
                 # during execution.
                 level = self._task_log_levels.get(state, self._level)
-                show_result = (self._logger.isEnabledFor(self._level)
-                               or state == states.FAILURE)
-                if show_result and \
-                   task_name not in self._hide_inputs_outputs_of:
+                show_result = (self._logger.isEnabledFor(self._level) or
+                               state == states.FAILURE)
+                if (show_result and
+                        task_name not in self._hide_inputs_outputs_of):
                     self._logger.log(level, "Task '%s' (%s) transitioned into"
                                      " state '%s' from state '%s' with"
                                      " result '%s'", task_name, task_uuid,
