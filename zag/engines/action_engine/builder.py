@@ -288,8 +288,8 @@ class MachineBuilder(object):
                     # before we iterate over any successors or predecessors
                     # that we know it has been completed and saved and so on...
                     completion_status = complete_an_atom(fut)
-                    if (not memory.failures
-                            and completion_status != WAS_CANCELLED):
+                    if (not memory.failures and
+                            completion_status != WAS_CANCELLED):
                         atom = fut.atom
                         try:
                             more_work = set(iter_next_atoms(atom=atom))
@@ -301,8 +301,8 @@ class MachineBuilder(object):
                         else:
                             next_up.update(more_work)
             current_flow_state = self._storage.get_flow_state()
-            if (current_flow_state == st.RUNNING
-                    and next_up and not memory.failures):
+            if (current_flow_state == st.RUNNING and
+                    next_up and not memory.failures):
                 memory.next_up.update(next_up)
                 return SCHEDULE
             elif memory.not_done:

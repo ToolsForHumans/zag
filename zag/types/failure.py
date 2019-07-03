@@ -252,11 +252,11 @@ class Failure(mixins.StrMixin):
     def _matches(self, other):
         if self is other:
             return True
-        return (self._exc_type_names == other._exc_type_names
-                and self.exception_args == other.exception_args
-                and self.exception_str == other.exception_str
-                and self.traceback_str == other.traceback_str
-                and self.causes == other.causes)
+        return (self._exc_type_names == other._exc_type_names and
+                self.exception_args == other.exception_args and
+                self.exception_str == other.exception_str and
+                self.traceback_str == other.traceback_str and
+                self.causes == other.causes)
 
     def matches(self, other):
         """Checks if another object is equivalent to this object.

@@ -22,11 +22,11 @@ Create Date: 2015-06-04 13:08:36.667948
 
 """
 
+from alembic import op
+
 # revision identifiers, used by Alembic.
 revision = '2ad4984f2864'
 down_revision = '3162c0f3f8e4'
-
-from alembic import op
 
 
 _ALTER_TO_JSON_TPL = 'ALTER TABLE %s ALTER COLUMN %s TYPE JSON USING %s::JSON'

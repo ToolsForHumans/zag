@@ -90,7 +90,7 @@ except (ImportError, AttributeError):
 _DECODE_ENCODE_ERRORS = tuple(_DECODE_ENCODE_ERRORS)
 
 # Use the best pickle from here on out...
-from six.moves import cPickle as pickle
+from six.moves import cPickle as pickle  # noqa: E402
 
 
 class UnknownSender(Exception):

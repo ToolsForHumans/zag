@@ -22,14 +22,14 @@ Create Date: 2014-01-20 18:12:42.503267
 
 """
 
-# revision identifiers, used by Alembic.
-revision = '84d6e888850'
-down_revision = '1c783c0c2875'
-
 from alembic import op
 import sqlalchemy as sa
 
 from zag.persistence import models
+
+# revision identifiers, used by Alembic.
+revision = '84d6e888850'
+down_revision = '1c783c0c2875'
 
 
 def upgrade():
