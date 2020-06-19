@@ -78,4 +78,4 @@ traceback2==1.4.0
 unittest2==1.1.0
 vine==1.1.4
 wrapt==1.7.0
-zake==0.1.6
+zake==0.2.2
