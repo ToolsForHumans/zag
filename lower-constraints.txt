@@ -67,7 +67,7 @@ six==1.10.0
 snowballstemmer==1.2.1
 Sphinx==1.6.2
 sphinxcontrib-websupport==1.0.1
-SQLAlchemy-Utils==0.30.11
+SQLAlchemy-Utils==0.36.8
 SQLAlchemy==1.0.10
 stevedore==1.20.0
 tenacity==4.4.0
